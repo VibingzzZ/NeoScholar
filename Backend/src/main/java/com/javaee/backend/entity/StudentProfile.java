@@ -12,14 +12,14 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @NoArgsConstructor
 public class StudentProfile {
-    private Long id;
-    private Long usreId;
-    private String majorOrField;
-    private Text learningGoal;
-    private Text knowledgeBase;
-    private String cognitiveStyle;
-    private Json commonMistakes;
-    private String interactionPreference;
-    private Timestamp updateAt;
+    private Long id;                            // 学生id
+    private Long userId;                        // 用户id
+    private String majorOrField;                // 专业或领域
+    private Text learningGoal;                  // 学习目标
+    private Text knowledgeBase;                 // 知识库
+    private String cognitiveStyle;              // 思维风格
+    private Json commonMistakes;                // 常见错误
+    private String interactionPreference;       // 交互偏好
+    private Timestamp updateAt;                 // 更新时间
 
 }
