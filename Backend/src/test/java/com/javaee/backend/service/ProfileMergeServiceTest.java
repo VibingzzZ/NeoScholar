@@ -25,7 +25,7 @@ class ProfileMergeServiceTest {
 
     @Test
     void testLLMMerge() {
-        String result = profileMergeAIService.mergeProfiles(
+        String result = String.valueOf(profileMergeAIService.mergeProfiles(
                 "计算机科学",
                 "我想掌握机器学习和深度学习的基础知识",
                 "Python, Java, 基础数学",
@@ -38,7 +38,7 @@ class ProfileMergeServiceTest {
                 "逻辑思维",
                 "{\"math\": \"代数错误\", \"coding\": \"语法错误\"}",
                 "文字交流"
-        );
+        ));
 
         System.out.println("LLM合并结果:");
         System.out.println(result);
