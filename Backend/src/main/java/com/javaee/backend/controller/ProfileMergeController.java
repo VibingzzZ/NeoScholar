@@ -22,7 +22,7 @@ public class ProfileMergeController {
         
         try {
             log.info("收到合并请求，原始ID: {}, 新ID: {}", id, userId);
-            profileMergeService.mergeProfile(id, userId);
+            profileMergeService.asyncExtractAndMergeProfile(id, userId);
             return ResponseEntity.ok("学生画像合并成功");
         } catch (Exception e) {
             log.error("合并学生画像失败", e);
