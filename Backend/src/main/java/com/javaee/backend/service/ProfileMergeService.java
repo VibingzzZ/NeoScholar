@@ -9,5 +9,12 @@ public interface ProfileMergeService  {
      * @param id 学生ID
      * @param userId 用户ID
      */
-    void mergeProfile(Long id, Long userId);
+  //  void mergeProfile(Long id, Long userId);
+
+    /**
+     * 异步提取学生的个人信息并合并
+     * @param id 学生ID
+     * @param userId 用户ID
+     */
+    void asyncExtractAndMergeProfile(Long id, Long userId);
 }

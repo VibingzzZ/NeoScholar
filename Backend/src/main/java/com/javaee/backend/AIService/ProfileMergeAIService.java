@@ -1,5 +1,6 @@
 package com.javaee.backend.AIService;
 
+import com.javaee.backend.po.dto.MergedProfileDTO;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
@@ -10,7 +11,7 @@ import dev.langchain4j.service.spring.AiService;
 public interface ProfileMergeAIService {
 
     @UserMessage(fromResource = "UserMergeMsgPrompt.txt")
-    String mergeProfiles(
+    MergedProfileDTO mergeProfiles(
             @V("originalMajor") String originalMajor,
             @V("originalLearningGoal") String originalLearningGoal,
             @V("originalKnowledgeBase") String originalKnowledgeBase,
