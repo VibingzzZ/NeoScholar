@@ -1,12 +1,10 @@
 package com.javaee.backend.AIService;
 
-import com.javaee.backend.po.dto.LearningPathNodeDTO;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 import dev.langchain4j.service.spring.AiService;
 
-import java.util.List;
 
 @AiService
 public interface PathPlanningAIService {

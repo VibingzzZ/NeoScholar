@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.javaee.backend.AIService.ProfileMergeAIService;
 import com.javaee.backend.config.AsyncConfig;
 import com.javaee.backend.po.dto.MergedProfileDTO;
+import com.javaee.backend.po.dto.Profile;
 import com.javaee.backend.entity.StudentProfile;
 import com.javaee.backend.mapper.ProfileMergeMapper;
 import dev.langchain4j.internal.Json;
@@ -58,13 +59,16 @@ public class ProfileMergeServiceImpl extends ServiceImpl<ProfileMergeMapper, Stu
             log.info("原始画像: {}", originalProfile);
             log.info("新画像: {}", newProfile);
 
-            MergedProfileDTO mergedProfile = profileMergeService.mergeProfiles(
+            Profile original = new Profile(
                     getStringValue(originalProfile.getMajorOrField()),
                     getTextValue(originalProfile.getLearningGoal()),
                     getTextValue(originalProfile.getKnowledgeBase()),
                     getStringValue(originalProfile.getCognitiveStyle()),
                     getJsonValue(originalProfile.getCommonMistakes()),
-                    getStringValue(originalProfile.getInteractionPreference()),
+                    getStringValue(originalProfile.getInteractionPreference())
+            );
+
+            Profile newProf = new Profile(
                     getStringValue(newProfile.getMajorOrField()),
                     getTextValue(newProfile.getLearningGoal()),
                     getTextValue(newProfile.getKnowledgeBase()),
@@ -72,6 +76,8 @@ public class ProfileMergeServiceImpl extends ServiceImpl<ProfileMergeMapper, Stu
                     getJsonValue(newProfile.getCommonMistakes()),
                     getStringValue(newProfile.getInteractionPreference())
             );
+
+            MergedProfileDTO mergedProfile = profileMergeService.mergeProfiles(original, newProf);
 
             log.info("LLM合并结果: {}", mergedProfile);
 

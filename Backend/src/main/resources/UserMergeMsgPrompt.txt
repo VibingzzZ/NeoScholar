@@ -1,20 +1,20 @@
 请分析以下两个学生画像，并将它们智能合并：
 
         原始学生画像：
-        - 专业或领域：{{originalMajor}}
-        - 学习目标：{{originalLearningGoal}}
-        - 知识库：{{originalKnowledgeBase}}
-        - 思维风格：{{originalCognitiveStyle}}
-        - 常见错误：{{originalCommonMistakes}}
-        - 交互偏好：{{originalInteractionPreference}}
+        - 专业或领域：{{original.major}}
+        - 学习目标：{{original.learningGoal}}
+        - 知识库：{{original.knowledgeBase}}
+        - 思维风格：{{original.cognitiveStyle}}
+        - 常见错误：{{original.commonMistakes}}
+        - 交互偏好：{{original.interactionPreference}}
 
         新的学生画像：
-        - 专业或领域：{{newMajor}}
-        - 学习目标：{{newLearningGoal}}
-        - 知识库：{{newKnowledgeBase}}
-        - 思维风格：{{newCognitiveStyle}}
-        - 常见错误：{{newCommonMistakes}}
-        - 交互偏好：{{newInteractionPreference}}
+        - 专业或领域：{{newProfile.major}}
+        - 学习目标：{{newProfile.learningGoal}}
+        - 知识库：{{newProfile.knowledgeBase}}
+        - 思维风格：{{newProfile.cognitiveStyle}}
+        - 常见错误：{{newProfile.commonMistakes}}
+        - 交互偏好：{{newProfile.interactionPreference}}
 
         请以JSON格式返回合并后的结果，格式如下：
         {
