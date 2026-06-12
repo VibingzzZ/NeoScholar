@@ -23,7 +23,7 @@ public class ChatController {
 
     @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> chat(@RequestBody ChatRequest chatRequest) {
-        String chatId = chatRequest.getChatId() + UUID.randomUUID();
+        String chatId = chatRequest.getChatId();
 
         chatMessageService.save(chatRequest.getQuestion(), chatId, chatRequest.getUserId(), "user");
 
