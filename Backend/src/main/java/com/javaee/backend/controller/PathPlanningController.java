@@ -1,5 +1,6 @@
 package com.javaee.backend.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.javaee.backend.config.Result;
 import com.javaee.backend.entity.StudentProfile;
 import com.javaee.backend.service.PathPlanningService;
@@ -24,20 +25,15 @@ public class PathPlanningController {
      * @return 操作结果
      */
     @PostMapping("generate")
-    public Result<Map<String, Object>> generatePath(@RequestBody StudentProfile profile) {
-        try {
-            log.info("收到学习路径生成请求, 用户ID: {}", profile.getUserId());
-            Long pathId = pathPlanningService.generateAndSavePath(profile);
-            if (pathId == null) {
-                return Result.error("路径生成失败，请稍后重试");
-            }
-            Map<String, Object> data = new HashMap<>();
-            data.put("pathId", pathId);
-            data.put("message", "路径生成成功");
-            return Result.success(data);
-        } catch (Exception e) {
-            log.error("生成学习路径失败", e);
-            return Result.error("生成失败: " + e.getMessage());
+    public Result<Map<String, Object>> generatePath(@RequestBody StudentProfile profile) throws JsonProcessingException {
+        log.info("收到学习路径生成请求, 用户ID: {}", profile.getUserId());
+        Long pathId = pathPlanningService.generateAndSavePath(profile);
+        if (pathId == null) {
+            return Result.error("路径生成失败，请稍后重试");
         }
+        Map<String, Object> data = new HashMap<>();
+        data.put("pathId", pathId);
+        data.put("message", "路径生成成功");
+        return Result.success(data);
     }
 }

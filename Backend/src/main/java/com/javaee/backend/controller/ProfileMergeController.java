@@ -19,14 +19,9 @@ public class ProfileMergeController {
     public Result<String> mergeProfiles(
             @PathVariable Long id,
             @PathVariable Long userId) {
-        
-        try {
-            log.info("收到合并请求，原始ID: {}, 新ID: {}", id, userId);
-            profileMergeService.asyncExtractAndMergeProfile(id, userId);
-            return Result.success("学生画像合并成功");
-        } catch (Exception e) {
-            log.error("合并学生画像失败", e);
-            return Result.error("合并失败: " + e.getMessage());
-        }
+
+        log.info("收到合并请求，原始ID: {}, 新ID: {}", id, userId);
+        profileMergeService.asyncExtractAndMergeProfile(id, userId);
+        return Result.success("学生画像合并成功");
     }
 }
