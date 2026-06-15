@@ -7,8 +7,10 @@ public interface PathPlanningService {
 
     /**
      * 生成并保存学习路径
+     *
      * @param profile 学生画像
+     * @return
      */
-    void generateAndSavePath(StudentProfile profile) throws JsonProcessingException;
+    Long generateAndSavePath(StudentProfile profile) throws JsonProcessingException;
 
 }

@@ -30,6 +30,8 @@ public class ResourceOrchestratorServiceImpl implements ResourceOrchestratorServ
     private FileStorageService fileStorageService;
     @Autowired
     private LearningPathsMapper learningPathsMapper;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Override
     public void generateResource(Long pathId) throws IOException {
@@ -64,9 +66,9 @@ public class ResourceOrchestratorServiceImpl implements ResourceOrchestratorServ
     }
     private List<LearningPathNodeDTO> parseNodes(String nodeJson) {
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            return mapper.readValue(nodeJson,
-                    new TypeReference<List<LearningPathNodeDTO>>(){});
+            return objectMapper.readValue(nodeJson,
+                    new TypeReference<>() {
+                    });
         } catch (Exception e) {
             throw new RuntimeException("解析学习节点JSON失败：",e);
         }

@@ -34,14 +34,16 @@ public class PathPlanningServiceImpl extends ServiceImpl<PathPlanningMapper, Lea
 
     /**
      * 生成学习路径并保存
+     *
      * @param profile 学生信息
+     * @return
      */
     @Override
-    public void generateAndSavePath(StudentProfile profile) {
+    public Long generateAndSavePath(StudentProfile profile) {
         //判断学生档案是否为空
         if(profile == null) {
             log.warn("学生档案为空,无法生成学生路径");
-            return;
+            return null;
         }
 
         try {
@@ -56,7 +58,7 @@ public class PathPlanningServiceImpl extends ServiceImpl<PathPlanningMapper, Lea
             String pathJson = pathPlanningAIService.evaluatePath(major, goal, knowledge);
             if(pathJson == null || pathJson.trim().isEmpty()){
                 log.warn("大模型生成的学习路径为空,无法保存");
-                return;
+                return null;
             }
             // 手动解析JSON为List
             List<LearningPathNodeDTO> pathNodes = objectMapper.readValue(pathJson,
@@ -64,7 +66,7 @@ public class PathPlanningServiceImpl extends ServiceImpl<PathPlanningMapper, Lea
 
             if(pathNodes.isEmpty()){
                 log.warn("大模型生成的学习路径节点为空,无法保存");
-                return;
+                return null;
             }
             String jsonStr = objectMapper.writeValueAsString(pathNodes);
             LearningPaths path = new LearningPaths();
@@ -81,5 +83,6 @@ public class PathPlanningServiceImpl extends ServiceImpl<PathPlanningMapper, Lea
         } catch (Exception e) {
             log.error("生成学习路径时发生错误", e);
         }
+        return null;
     }
 }

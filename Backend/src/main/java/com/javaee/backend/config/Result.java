@@ -1,36 +1,35 @@
 package com.javaee.backend.config;
 
+import lombok.Getter;
+
+@Getter
 public class Result<T> {
     private Integer code;
     private String message;
     private T data;
 
-    public Result<T> success(T data) {
-        this.code = 200;
-        this.message = "success";
-        this.data = data;
-        return this;
+    public static <T> Result<T> success(T data) {
+        Result<T> result = new Result<>();
+        result.code = 200;
+        result.message = "success";
+        result.data = data;
+        return result;
     }
 
-    private Result(){}
-    public Result <T> success(){
-        this.code = 200;
-        this.message = "success";
-        return this;
+    public static <T> Result<T> success() {
+        Result<T> result = new Result<>();
+        result.code = 200;
+        result.message = "success";
+        return result;
     }
 
-    public Result<T> error(String message) {
-        this.code = 500;
-        this.message = message;
-        return this;
+    public static <T> Result<T> error(String message) {
+        Result<T> result = new Result<>();
+        result.code = 500;
+        result.message = message;
+        return result;
     }
 
-    /**
-     * 失败返回结果（带错误码）
-     *
-     * @param message 提示信息
-     * @param code 错误码
-     */
     public static <T> Result<T> errorWithCode(String message, Integer code) {
         Result<T> result = new Result<>();
         result.message = message;
@@ -38,6 +37,5 @@ public class Result<T> {
         return result;
     }
 
+
 }
-
-

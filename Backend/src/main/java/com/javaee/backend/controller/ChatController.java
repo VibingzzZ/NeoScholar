@@ -1,7 +1,7 @@
 package com.javaee.backend.controller;
 
 import com.javaee.backend.AIService.ConsultantService;
-import com.javaee.backend.entity.ChatMessage;
+
 import com.javaee.backend.po.dto.ChatRequest;
 import com.javaee.backend.service.ChatMessageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +9,6 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
-import java.util.UUID;
 
 @RestController
 @RequestMapping("api/chat")

@@ -1,6 +1,5 @@
 package com.javaee.backend.AIService;
 
-import com.javaee.backend.entity.StudentProfile;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
@@ -10,7 +9,7 @@ import reactor.core.publisher.Flux;
 /**
  * 提供用户对话服务
  */
-@AiService
+@AiService(tools = "GenerateTools")
 public interface ConsultantService {
     /**
      * 流式输出
