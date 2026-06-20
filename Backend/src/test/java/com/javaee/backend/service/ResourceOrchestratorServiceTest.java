@@ -7,6 +7,7 @@ import com.javaee.backend.mapper.LearningPathsMapper;
 import com.javaee.backend.mapper.LearningResourceMapper;
 import com.javaee.backend.po.dto.LearningPathNodeDTO;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -55,6 +56,7 @@ class ResourceOrchestratorServiceTest {
     }
 
     @Test
+    @Tag("ai")
     void testGenerateResource() throws Exception {
         System.out.println("=== 测试资源生成（需要有效的 path_id） ===");
 

@@ -25,6 +25,7 @@ class ProfileMergeServiceTest {
     private ProfileMergeMapper profileMergeMapper;
 
     @Test
+    @Tag("ai")
     void testLLMMerge() {
         Profile original = new Profile(
                 "计算机科学",

@@ -19,6 +19,12 @@ spring:
       enabled: false
 
 langchain4j:
+  open-ai:
+    chat-model:
+      api-key: ${QWEN_API_KEY:}
+    streaming-chat-model:
+      api-key: ${QWEN_API_KEY:}
+
   community:
     redis:
       host: localhost
