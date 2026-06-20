@@ -5,6 +5,7 @@ import com.javaee.backend.entity.StudentProfile;
 import com.javaee.backend.mapper.ProfileMergeMapper;
 import com.javaee.backend.po.dto.Profile;
 import dev.langchain4j.internal.Json;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
