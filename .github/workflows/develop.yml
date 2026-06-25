@@ -1,4 +1,4 @@
-name: Develop CI - Basic Validation
+name: Develop CI - Test & Build
 
 on:
   push:
@@ -8,12 +8,36 @@ on:
   workflow_dispatch:
 
 jobs:
-  backend-compile:
-    name: Backend - Compile Check
+  backend-test:
+    name: Backend - Unit Tests (exclude AI)
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: Backend
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: 123456
+          MYSQL_DATABASE: neo_scholar
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -p123456"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
       - name: Checkout repository
@@ -26,8 +50,23 @@ jobs:
           distribution: temurin
           cache: maven
 
-      - name: Compile Backend
-        run: mvn compile -B
+      - name: Wait for MySQL
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq mysql-client
+          while ! mysqladmin ping -h"127.0.0.1" -P"3306" -p"123456" --silent 2>/dev/null; do
+            sleep 3
+          done
+          echo "MySQL is ready."
+
+      - name: Initialize database schema
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -u root -p123456 neo_scholar < src/main/resources/schema.sql
+          echo "Database schema initialized."
+
+      - name: Run unit tests (exclude AI)
+        env:
+          SPRING_PROFILES_ACTIVE: ci
+        run: mvn test -B -Dexcludes="**/*AITest.java"
 
   frontend-build:
     name: Frontend - Build Check
