@@ -64,8 +64,8 @@ mybatis-plus:
       id-type: auto
       table-prefix:
       table-underline: true
-  mapper-locations: classpath*:com/example/Mapper/*.xml
-  type-aliases-package: com.example.Pojo
+  # 项目使用 @Mapper 注解，无需 XML Mapper 文件
+  type-aliases-package: com.javaee.backend.entity
 
 # JWT 配置
 #jwt:
