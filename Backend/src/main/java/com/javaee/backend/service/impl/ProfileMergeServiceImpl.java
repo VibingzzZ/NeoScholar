@@ -8,7 +8,6 @@ import com.javaee.backend.po.dto.MergedProfileDTO;
 import com.javaee.backend.po.dto.Profile;
 import com.javaee.backend.entity.StudentProfile;
 import com.javaee.backend.mapper.ProfileMergeMapper;
-import dev.langchain4j.internal.Json;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -88,7 +87,7 @@ public class ProfileMergeServiceImpl extends ServiceImpl<ProfileMergeMapper, Stu
             updateProfile.setLearningGoal(createText(mergedProfile.getLearningGoal()));
             updateProfile.setKnowledgeBase(createText(mergedProfile.getKnowledgeBase()));
             updateProfile.setCognitiveStyle(mergedProfile.getCognitiveStyle());
-            updateProfile.setCommonMistakes(createJson(mergedProfile.getCommonMistakes()));
+            updateProfile.setCommonMistakes(mergedProfile.getCommonMistakes());
             updateProfile.setInteractionPreference(mergedProfile.getInteractionPreference());
             updateProfile.setUpdateAt(new Timestamp(System.currentTimeMillis()));
 
@@ -115,8 +114,8 @@ public class ProfileMergeServiceImpl extends ServiceImpl<ProfileMergeMapper, Stu
         return text != null ? text.getData() : "";
     }
 
-    private String getJsonValue(dev.langchain4j.internal.Json json) {
-        return json != null ? json.toString() : "{}";
+    private String getJsonValue(String json) {
+        return json != null ? json : "{}";
     }
 
     private Text createText(String content) {
@@ -134,16 +133,3 @@ public class ProfileMergeServiceImpl extends ServiceImpl<ProfileMergeMapper, Stu
         }
         return doc.createTextNode(content);
     }
-
-    private Json createJson(String jsonString) {
-        if (jsonString == null || jsonString.trim().isEmpty()) {
-            return null;
-        }
-        try {
-            return objectMapper.readValue(jsonString, Json.class);
-        } catch (Exception e) {
-            log.error("创建Json对象时发生错误: {}", jsonString, e);
-            return null;
-        }
-    }
-}

@@ -7,6 +7,7 @@ import com.javaee.backend.entity.LearningPaths;
 import com.javaee.backend.entity.StudentProfile;
 import com.javaee.backend.mapper.PathPlanningMapper;
 import com.javaee.backend.po.dto.LearningPathNodeDTO;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,6 +18,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.sql.Timestamp;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @SpringBootTest
 class PathPlanningAITest {
@@ -32,6 +35,13 @@ class PathPlanningAITest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @BeforeEach
+    void checkApiKey() {
+        String apiKey = System.getenv("QWEN_API_KEY");
+        assumeTrue(apiKey != null && !apiKey.isBlank(),
+                "跳过：未设置 QWEN_API_KEY 环境变量");
+    }
 
     /**
      * 测试LLM生成学习路径功能
