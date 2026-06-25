@@ -75,7 +75,7 @@ jobs:
         env:
           QWEN_API_KEY: ${{ secrets.QWEN_API_KEY }}
           SPRING_PROFILES_ACTIVE: ci
-        run: mvn verify -B
+        run: mvn verify -B -e
 
       - name: Package Backend
         run: mvn package -DskipTests -B
