@@ -65,6 +65,7 @@ jobs:
 
       - name: Run unit tests (exclude AI)
         env:
+          QWEN_API_KEY: ${{ secrets.QWEN_API_KEY || 'sk-ci-dummy' }}
           SPRING_PROFILES_ACTIVE: ci
         run: mvn test -B -e -Dsurefire.excludes="**/*AITest.java"
 

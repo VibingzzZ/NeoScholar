@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 @Slf4j
-@Service
+@Service("GenerateTools")
 public class GenerateTools {
 
     @Lazy
