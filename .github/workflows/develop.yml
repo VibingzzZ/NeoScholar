@@ -67,7 +67,7 @@ jobs:
         env:
           QWEN_API_KEY: ${{ secrets.QWEN_API_KEY || 'sk-ci-dummy' }}
           SPRING_PROFILES_ACTIVE: ci
-        run: mvn test -B -e -Dsurefire.excludes="**/*AITest.java"
+        run: mvn test -B -e '-Dtest=!*AITest'
 
   frontend-build:
     name: Frontend - Build Check
