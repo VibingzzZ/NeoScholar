@@ -1,10 +1,7 @@
 package com.javaee.backend.service;
 
-import com.javaee.backend.AIService.ProfileMergeAIService;
 import com.javaee.backend.entity.StudentProfile;
 import com.javaee.backend.mapper.ProfileMergeMapper;
-import com.javaee.backend.po.dto.Profile;
-import dev.langchain4j.internal.Json;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,36 +16,7 @@ import java.sql.Timestamp;
 class ProfileMergeServiceTest {
 
     @Autowired
-    private ProfileMergeAIService profileMergeAIService;
-
-    @Autowired
     private ProfileMergeMapper profileMergeMapper;
-
-    @Test
-    void testLLMMerge() {
-        Profile original = new Profile(
-                "计算机科学",
-                "我想掌握机器学习和深度学习的基础知识",
-                "Python, Java, 基础数学",
-                "逻辑思维",
-                "{\"math\": \"代数错误\", \"coding\": \"语法错误\"}",
-                "文字交流"
-        );
-
-        Profile newProfile = new Profile(
-                "计算机科学",
-                "我想掌握机器学习和深度学习",
-                "Python, Java, 线性代数",
-                "逻辑思维",
-                "{\"math\": \"代数错误\", \"coding\": \"语法错误\"}",
-                "文字交流"
-        );
-
-        String result = String.valueOf(profileMergeAIService.mergeProfiles(original, newProfile));
-
-        System.out.println("LLM合并结果:");
-        System.out.println(result);
-    }
 
     @Test
     void testProfileMerge() {
@@ -59,7 +27,7 @@ class ProfileMergeServiceTest {
         profile1.setLearningGoal(createText("我想掌握机器学习和深度学习的基础知识"));
         profile1.setKnowledgeBase(createText("Python, Java, 基础数学"));
         profile1.setCognitiveStyle("逻辑思维");
-        profile1.setCommonMistakes(Json.fromJson("{\"math\": \"代数错误\", \"coding\": \"语法错误\"}",Json.class));
+        profile1.setCommonMistakes("{\"math\": \"代数错误\", \"coding\": \"语法错误\"}");
         profile1.setInteractionPreference("文字交流");
         profile1.setUpdateAt(new Timestamp(System.currentTimeMillis()));
 
@@ -70,7 +38,7 @@ class ProfileMergeServiceTest {
         profile2.setLearningGoal(createText("深入学习神经网络和自然语言处理"));
         profile2.setKnowledgeBase(createText("Python, TensorFlow, PyTorch"));
         profile2.setCognitiveStyle("视觉学习");
-        profile2.setCommonMistakes(Json.fromJson("{\"math\": \"微积分错误\", \"coding\": \"逻辑错误\"}", Json.class));
+        profile2.setCommonMistakes("{\"math\": \"微积分错误\", \"coding\": \"逻辑错误\"}");
         profile2.setInteractionPreference("图表交流");
         profile2.setUpdateAt(new Timestamp(System.currentTimeMillis()));
 

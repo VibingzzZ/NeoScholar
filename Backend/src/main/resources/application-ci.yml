@@ -1,0 +1,49 @@
+# CI环境专用配置
+# 覆盖 application.yaml 中的默认值，适配 GitHub Actions 服务容器
+
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/neo_scholar?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # CI 中不启动 devtools
+  devtools:
+    restart:
+      enabled: false
+
+langchain4j:
+  open-ai:
+    chat-model:
+      api-key: ${QWEN_API_KEY:sk-ci-dummy}
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      model-name: qwen-plus
+      temperature: 0.7
+      max-tokens: 2000
+      log-requests: false
+      log-responses: false
+    streaming-chat-model:
+      api-key: ${QWEN_API_KEY:sk-ci-dummy}
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      model-name: qwen-plus
+      temperature: 0.7
+      max-tokens: 2000
+      log-requests: false
+      log-responses: false
+
+  community:
+    redis:
+      host: localhost
+      port: 6379
+
+logging:
+  level:
+    root: WARN
+    com.javaee.backend: INFO
+    org.springframework.test: WARN

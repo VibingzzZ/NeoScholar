@@ -25,7 +25,7 @@ langchain4j:
   open-ai:
     chat-model:
       base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
-      api-key: ${QWEN_API_KEY}
+      api-key: ${QWEN_API_KEY:}
       model-name: qwen-plus
       temperature: 0.7
       max-tokens: 2000
@@ -33,7 +33,7 @@ langchain4j:
       log-responses: true
     streaming-chat-model:
       base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
-      api-key: ${QWEN_API_KEY}
+      api-key: ${QWEN_API_KEY:}
       model-name: qwen-plus
       temperature: 0.7
       max-tokens: 2000
@@ -64,8 +64,8 @@ mybatis-plus:
       id-type: auto
       table-prefix:
       table-underline: true
-  mapper-locations: classpath*:com/example/Mapper/*.xml
-  type-aliases-package: com.example.Pojo
+  # 项目使用 @Mapper 注解，无需 XML Mapper 文件
+  type-aliases-package: com.javaee.backend.entity
 
 # JWT 配置
 #jwt:

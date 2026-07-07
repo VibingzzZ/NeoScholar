@@ -1,6 +1,5 @@
 package com.javaee.backend.entity;
 
-import dev.langchain4j.internal.Json;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,7 +17,7 @@ public class StudentProfile {
     private Text learningGoal;                  // 学习目标
     private Text knowledgeBase;                 // 知识库
     private String cognitiveStyle;              // 思维风格
-    private Json commonMistakes;                // 常见错误
+    private String commonMistakes;              // 常见错误（JSON字符串）
     private String interactionPreference;       // 交互偏好
     private Timestamp updateAt;                 // 更新时间
 
