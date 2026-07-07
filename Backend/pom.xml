@@ -100,9 +100,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <excludes>
-                                <exclude>**/*AITest.java</exclude>
-                            </excludes>
+                            <excludedGroups>ai</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
