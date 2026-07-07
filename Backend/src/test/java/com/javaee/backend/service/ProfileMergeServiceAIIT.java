@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @SpringBootTest
 @Tag("ai")
-class ProfileMergeServiceAITest {
+class ProfileMergeServiceAIIT {
 
     @Autowired
     private ProfileMergeAIService profileMergeAIService;

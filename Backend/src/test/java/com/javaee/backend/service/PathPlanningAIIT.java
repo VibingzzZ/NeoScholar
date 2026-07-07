@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @SpringBootTest
 @Tag("ai")
-class PathPlanningAITest {
+class PathPlanningAIIT {
 
     @Autowired
     private PathPlanningService pathPlanningService;

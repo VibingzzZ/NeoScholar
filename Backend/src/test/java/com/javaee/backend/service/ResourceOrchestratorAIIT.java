@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @SpringBootTest
 @Tag("ai")
-class ResourceOrchestratorAITest {
+class ResourceOrchestratorAIIT {
 
     @Autowired
     private ResourceOrchestratorService orchestratorService;
