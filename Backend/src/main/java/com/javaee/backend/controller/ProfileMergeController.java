@@ -8,8 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/user/profile")
-@CrossOrigin(origins = "*")
+@RequestMapping("api/user/profile")
 public class ProfileMergeController {
 
     @Autowired

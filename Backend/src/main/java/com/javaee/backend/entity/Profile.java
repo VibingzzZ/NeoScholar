@@ -1,4 +1,4 @@
-package com.javaee.backend.po.dto;
+package com.javaee.backend.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

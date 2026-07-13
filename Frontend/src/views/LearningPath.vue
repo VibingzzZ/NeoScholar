@@ -97,42 +97,20 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Refresh, Check, MapLocation } from '@element-plus/icons-vue'
+import { getLearningPaths, updateProgress, generatePath } from '@/api/path'
+import { useUserStore } from '@/stores/user'
 
-const activeTab = ref('1')
+const userStore = useUserStore()
+const userId = computed(() => userStore.user?.id || 1)
+
+const activeTab = ref('')
 const selectedNodeIndex = ref(0)
+const loading = ref(false)
 
-const learningPaths = ref([
-  {
-    id: 1,
-    userId: 1,
-    pathName: 'Spring Boot 微服务专属学习路径',
-    currentNodeIndex: 2,
-    nodesJson: JSON.stringify([
-      { stepOrder: 1, title: 'Java 基础巩固', description: '回顾 Java 核心语法、面向对象编程、集合框架与异常处理机制，为后续框架学习打好基础。', estimatedDays: 5 },
-      { stepOrder: 2, title: 'Spring 框架入门', description: '学习 Spring IoC 容器、依赖注入、AOP 面向切面编程等核心概念，理解 Spring 的设计思想。', estimatedDays: 7 },
-      { stepOrder: 3, title: 'Spring Boot 核心', description: '掌握 Spring Boot 自动配置、起步依赖、配置文件管理，学习构建 RESTful API 的最佳实践。', estimatedDays: 10 },
-      { stepOrder: 4, title: '数据库与 MyBatis-Plus', description: '深入学习 MySQL 数据库设计与优化，结合 MyBatis-Plus 实现高效的 ORM 数据访问层。', estimatedDays: 8 },
-      { stepOrder: 5, title: '微服务架构设计', description: '学习 Spring Cloud 微服务治理，包括服务注册发现、配置中心、网关路由、熔断降级等核心组件。', estimatedDays: 14 },
-      { stepOrder: 6, title: '项目实战', description: '基于所学的技术栈，从零搭建一个完整的微服务项目，涵盖用户、订单、商品等核心业务模块。', estimatedDays: 15 }
-    ])
-  },
-  {
-    id: 2,
-    userId: 1,
-    pathName: '数据结构与算法精讲专属学习路径',
-    currentNodeIndex: 0,
-    nodesJson: JSON.stringify([
-      { stepOrder: 1, title: '复杂度分析', description: '学习时间复杂度和空间复杂度的分析方法，掌握大 O 表示法的实际应用。', estimatedDays: 3 },
-      { stepOrder: 2, title: '数组与链表', description: '深入理解数组和链表的底层实现，对比两者在不同场景下的性能差异。', estimatedDays: 4 },
-      { stepOrder: 3, title: '栈与队列', description: '学习栈和队列的 ADT 定义及实现，掌握单调栈、优先队列等进阶技巧。', estimatedDays: 4 },
-      { stepOrder: 4, title: '树与图', description: '掌握二叉树、平衡树、图的遍历算法，理解 DFS/BFS 在树和图问题中的应用。', estimatedDays: 10 },
-      { stepOrder: 5, title: '动态规划', description: '从经典 DP 问题入手，学习记忆化搜索、状态转移方程的推导与优化策略。', estimatedDays: 12 }
-    ])
-  }
-])
+const learningPaths = ref([])
 
 const currentPath = computed(() =>
   learningPaths.value.find((p) => String(p.id) === activeTab.value)
@@ -140,7 +118,13 @@ const currentPath = computed(() =>
 
 const currentNodeList = computed(() => {
   if (!currentPath.value) return []
-  return JSON.parse(currentPath.value.nodesJson)
+  try {
+    return typeof currentPath.value.nodesJson === 'string'
+      ? JSON.parse(currentPath.value.nodesJson)
+      : currentPath.value.nodesJson
+  } catch {
+    return []
+  }
 })
 
 const progressPercent = computed(() => {
@@ -149,23 +133,63 @@ const progressPercent = computed(() => {
 })
 
 const totalDays = computed(() =>
-  currentNodeList.value.reduce((sum, n) => sum + n.estimatedDays, 0)
+  currentNodeList.value.reduce((sum, n) => sum + (n.estimatedDays || 0), 0)
 )
 
 function selectNode(index) {
   selectedNodeIndex.value = selectedNodeIndex.value === index ? -1 : index
 }
 
-function completeNode(index) {
-  if (currentPath.value && index === currentPath.value.currentNodeIndex) {
-    currentPath.value.currentNodeIndex++
-    ElMessage.success('节点已完成，继续加油！')
+async function completeNode(index) {
+  if (!currentPath.value || index !== currentPath.value.currentNodeIndex) return
+  const newIndex = index + 1
+  try {
+    const res = await updateProgress(currentPath.value.id, newIndex)
+    if (res && res.code === 200) {
+      currentPath.value.currentNodeIndex = newIndex
+      ElMessage.success('节点已完成，继续加油！')
+    } else {
+      ElMessage.error(res?.message || '更新失败')
+    }
+  } catch (e) {
+    ElMessage.error('更新进度失败，请检查网络')
   }
 }
 
-function regeneratePath() {
-  ElMessage.info('正在重新生成学习路径...')
+async function regeneratePath() {
+  loading.value = true
+  try {
+    const res = await generatePath(userId.value)
+    if (res && res.code === 200) {
+      ElMessage.success('学习路径已重新生成')
+      await loadPaths()
+    } else {
+      ElMessage.error(res?.message || '生成失败，请确认已创建学生画像')
+    }
+  } catch (e) {
+    ElMessage.error('生成失败，请检查网络')
+  } finally {
+    loading.value = false
+  }
 }
+
+async function loadPaths() {
+  try {
+    const res = await getLearningPaths(userId.value)
+    if (res && res.code === 200 && res.data) {
+      learningPaths.value = res.data
+      if (res.data.length > 0 && !activeTab.value) {
+        activeTab.value = String(res.data[0].id)
+      }
+    }
+  } catch (e) {
+    console.error('加载学习路径失败:', e)
+  }
+}
+
+onMounted(() => {
+  loadPaths()
+})
 </script>
 
 <style scoped lang="scss">

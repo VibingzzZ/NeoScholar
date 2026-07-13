@@ -1,7 +1,7 @@
 package com.javaee.backend.AIService;
 
 import com.javaee.backend.po.dto.MergedProfileDTO;
-import com.javaee.backend.po.dto.Profile;
+import com.javaee.backend.entity.Profile;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;

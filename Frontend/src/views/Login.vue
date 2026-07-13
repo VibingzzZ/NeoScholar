@@ -27,10 +27,10 @@
 
       <div class="login-form-area">
         <div class="form-card">
-          <h2>欢迎回来</h2>
-          <p class="form-subtitle">登录你的账号，继续学习之旅</p>
+          <h2>{{ isRegister ? '创建账号' : '欢迎回来' }}</h2>
+          <p class="form-subtitle">{{ isRegister ? '注册新账号，开启学习之旅' : '登录你的账号，继续学习之旅' }}</p>
 
-          <el-form ref="formRef" :model="form" :rules="rules" size="large" @submit.prevent="handleLogin">
+          <el-form ref="formRef" :model="form" :rules="rules" size="large" @submit.prevent="handleSubmit">
             <el-form-item prop="username">
               <el-input
                 v-model="form.username"
@@ -43,27 +43,42 @@
               <el-input
                 v-model="form.password"
                 type="password"
-                placeholder="请输入密码"
+                :placeholder="isRegister ? '请输入密码（至少6位）' : '请输入密码'"
                 :prefix-icon="Lock"
                 show-password
-                @keyup.enter="handleLogin"
+                @keyup.enter="handleSubmit"
+              />
+            </el-form-item>
+
+            <!-- 注册模式下显示确认密码 -->
+            <el-form-item prop="confirmPassword" v-if="isRegister">
+              <el-input
+                v-model="form.confirmPassword"
+                type="password"
+                placeholder="请再次输入密码"
+                :prefix-icon="Lock"
+                show-password
+                @keyup.enter="handleSubmit"
               />
             </el-form-item>
 
             <el-form-item>
-              <el-button type="primary" :loading="loading" class="login-btn" @click="handleLogin">
-                登 录
+              <el-button type="primary" :loading="loading" class="login-btn" @click="handleSubmit">
+                {{ isRegister ? '注 册' : '登 录' }}
               </el-button>
             </el-form-item>
 
-            <div class="form-extra">
+            <div class="form-extra" v-if="!isRegister">
               <el-checkbox v-model="rememberMe">记住密码</el-checkbox>
               <a href="#">忘记密码？</a>
             </div>
           </el-form>
 
           <div class="register-link">
-            还没有账号？<a href="#">立即注册</a>
+            {{ isRegister ? '已有账号？' : '还没有账号？' }}
+            <a href="#" @click.prevent="isRegister = !isRegister; form.confirmPassword = ''">
+              {{ isRegister ? '去登录' : '立即注册' }}
+            </a>
           </div>
         </div>
       </div>
@@ -77,30 +92,59 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Sunny, UserFilled, MapLocation, ChatDotRound, User, Lock } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
+import { login as loginApi, register as registerApi } from '@/api/auth'
 
 const router = useRouter()
 const store = useUserStore()
 
-const form = reactive({ username: '', password: '' })
+const isRegister = ref(false)
+const form = reactive({ username: '', password: '', confirmPassword: '' })
 const rememberMe = ref(false)
 const loading = ref(false)
 
 const rules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
+  ],
+  confirmPassword: [
+    {
+      validator: (_rule, value, callback) => {
+        if (!value) {
+          callback(new Error('请再次输入密码'))
+        } else if (value !== form.password) {
+          callback(new Error('两次输入的密码不一致'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ]
 }
 
-function handleLogin() {
+async function handleSubmit() {
   loading.value = true
-  setTimeout(() => {
+  try {
+    const api = isRegister.value ? registerApi : loginApi
+    const res = await api(form.username, form.password)
+    if (res && res.code === 200 && res.data) {
+      const { userId, username, token } = res.data
+      store.login({ id: userId, username, avatar: '' }, token)
+      if (rememberMe.value && !isRegister.value) {
+        localStorage.setItem('rememberedUser', form.username)
+      }
+      ElMessage.success(isRegister.value ? '注册成功！' : '登录成功，欢迎回来！')
+      router.push('/dashboard')
+    } else {
+      ElMessage.error(res?.message || (isRegister.value ? '注册失败' : '登录失败'))
+    }
+  } catch (e) {
+    ElMessage.error(isRegister.value ? '注册失败，请检查网络连接' : '登录失败，请检查网络连接')
+  } finally {
     loading.value = false
-    store.login(
-      { id: 1, username: form.username || '张同学', avatar: '' },
-      'demo-token'
-    )
-    ElMessage.success('登录成功，欢迎回来！')
-    router.push('/dashboard')
-  }, 800)
+  }
 }
 </script>
 
