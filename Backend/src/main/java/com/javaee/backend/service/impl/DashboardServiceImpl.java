@@ -41,7 +41,7 @@ public class DashboardServiceImpl implements DashboardService {
 
         LambdaQueryWrapper<ChatMessage> chatWrapper = new LambdaQueryWrapper<>();
         chatWrapper.eq(ChatMessage::getUserId, userId).eq(ChatMessage::getRole, "user");
-        stats.setAiConsultCount((int) chatMessageMapper.selectCount(chatWrapper));
+        stats.setAiConsultCount(chatMessageMapper.selectCount(chatWrapper).intValue());
 
         LambdaQueryWrapper<ChatMessage> allMsgWrapper = new LambdaQueryWrapper<>();
         allMsgWrapper.eq(ChatMessage::getUserId, userId).eq(ChatMessage::getRole, "user")
