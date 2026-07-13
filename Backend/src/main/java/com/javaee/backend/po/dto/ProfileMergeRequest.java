@@ -1,5 +1,6 @@
 package com.javaee.backend.po.dto;
 
+import com.javaee.backend.entity.Profile;
 import lombok.Data;
 
 @Data

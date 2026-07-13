@@ -1,7 +1,7 @@
 package com.javaee.backend.service;
 
 import com.javaee.backend.AIService.ProfileMergeAIService;
-import com.javaee.backend.po.dto.Profile;
+import com.javaee.backend.entity.Profile;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
