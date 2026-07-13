@@ -11,19 +11,29 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 学习路径查询与管理接口
+ */
 @Slf4j
 @RestController
-@RequestMapping("api/learning-path")
+@RequestMapping("/api/learning-path")
 public class LearningPathController {
 
     @Autowired
     private LearningPathService learningPathService;
 
+    /**
+     * 查询用户的所有学习路径
+     */
     @GetMapping("/list/{userId}")
     public Result<List<LearningPaths>> listPaths(@PathVariable Long userId) {
-        return Result.success(learningPathService.listByUserId(userId));
+        List<LearningPaths> paths = learningPathService.listByUserId(userId);
+        return Result.success(paths);
     }
 
+    /**
+     * 查询路径详情
+     */
     @GetMapping("/detail/{pathId}")
     public Result<LearningPaths> getPathDetail(@PathVariable Long pathId) {
         LearningPaths path = learningPathService.getById(pathId);
@@ -33,6 +43,9 @@ public class LearningPathController {
         return Result.success(path);
     }
 
+    /**
+     * 根据用户 ID 生成学习路径
+     */
     @PostMapping("/generate/{userId}")
     public Result<Map<String, Object>> generatePath(@PathVariable Long userId) {
         log.info("收到学习路径生成请求, userId: {}", userId);
@@ -46,6 +59,9 @@ public class LearningPathController {
         return Result.success(data);
     }
 
+    /**
+     * 更新学习进度
+     */
     @PostMapping("/progress")
     public Result<Void> updateProgress(@RequestBody Map<String, Object> body) {
         Long pathId = ((Number) body.get("pathId")).longValue();

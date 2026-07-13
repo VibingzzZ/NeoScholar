@@ -30,9 +30,13 @@ export function useChat() {
       question,
       chatId,
       userId,
-      (token) => { currentReply.value += token },
+      (token) => {
+        currentReply.value += token
+      },
       () => {
-        if (currentReply.value) addMessage('assistant', currentReply.value)
+        if (currentReply.value) {
+          addMessage('assistant', currentReply.value)
+        }
         currentReply.value = ''
         loading.value = false
       },
@@ -46,12 +50,16 @@ export function useChat() {
 
   function stopStreaming() {
     controller?.abort()
-    if (currentReply.value) addMessage('assistant', currentReply.value)
+    if (currentReply.value) {
+      addMessage('assistant', currentReply.value)
+    }
     currentReply.value = ''
     loading.value = false
   }
 
-  onUnmounted(() => { controller?.abort() })
+  onUnmounted(() => {
+    controller?.abort()
+  })
 
   return { messages, loading, currentReply, sendMessage, stopStreaming }
 }

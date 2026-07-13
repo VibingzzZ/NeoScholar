@@ -11,28 +11,24 @@
         <div class="stat-card">
           <div class="stat-label">学习路径数</div>
           <div class="stat-value">{{ stats.pathCount }}</div>
-          <div class="stat-change up">↑ 1 条新路径</div>
         </div>
       </el-col>
       <el-col :span="6">
         <div class="stat-card">
           <div class="stat-label">已完成节点</div>
           <div class="stat-value">{{ stats.completedNodes }}</div>
-          <div class="stat-change up">↑ 本周完成 4 个</div>
         </div>
       </el-col>
       <el-col :span="6">
         <div class="stat-card">
           <div class="stat-label">学习天数</div>
           <div class="stat-value">{{ stats.activeDays }}</div>
-          <div class="stat-change up">连续学习中</div>
         </div>
       </el-col>
       <el-col :span="6">
         <div class="stat-card">
           <div class="stat-label">AI 辅导次数</div>
           <div class="stat-value">{{ stats.aiConsultCount }}</div>
-          <div class="stat-change">今日已对话 3 次</div>
         </div>
       </el-col>
     </el-row>
@@ -171,6 +167,7 @@ import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
 
+// ==================== 统计数据 ====================
 const stats = ref({ pathCount: 0, completedNodes: 0, activeDays: 0, aiConsultCount: 0, dailyActivities: [] })
 
 // ==================== 热力图数据 ====================
@@ -193,23 +190,15 @@ function hideTooltip() {
   tooltip.value.visible = false
 }
 
-function generateHeatmapData(dailyActivities = []) {
+function generateHeatmapData(activityMap) {
   const now = new Date()
   const yearAgo = new Date(now)
   yearAgo.setFullYear(yearAgo.getFullYear() - 1)
   yearAgo.setDate(yearAgo.getDate() + 1)
 
-  // 从 API 数据构建 activityMap
-  const activityMap = new Map()
-  for (const item of dailyActivities) {
-    activityMap.set(item.date, item.count)
-  }
-
-  // 转换为网格：每列是一个周（7天，从周一开始）
-  // 先定位第一天的周几
-  const startDay = yearAgo.getDay() // 0=周日
-  // 我们要对齐到周一为第一行，所以需要填充前面的空白
-  const offset = startDay === 0 ? 6 : startDay - 1 // 到周一需要偏移的天数
+  // 转换为网格：每列是一个周
+  const startDay = yearAgo.getDay()
+  const offset = startDay === 0 ? 6 : startDay - 1
 
   const weeks = []
   const firstDate = new Date(yearAgo)
@@ -217,9 +206,8 @@ function generateHeatmapData(dailyActivities = []) {
 
   const dayMap = ['日', '一', '二', '三', '四', '五', '六']
 
-  let week = []
   for (let i = 0; i < 53; i++) {
-    week = []
+    const week = []
     for (let j = 0; j < 7; j++) {
       const d = new Date(firstDate)
       d.setDate(d.getDate() + i * 7 + j)
@@ -251,9 +239,7 @@ const CELL_GAP = 3
 const STEPS_PER_WEEK = CELL_WIDTH + CELL_GAP
 
 const monthLabelPositions = computed(() => {
-  // 扫描每个格子，找到每月 1 号所在的周
-  const monthMap = new Map() // "2025-6" → { weekIndex, year, month }
-
+  const monthMap = new Map()
   for (let wi = 0; wi < heatmapData.value.length; wi++) {
     const week = heatmapData.value[wi]
     for (const cell of week) {
@@ -266,14 +252,12 @@ const monthLabelPositions = computed(() => {
         if (!monthMap.has(key)) {
           monthMap.set(key, { weekIndex: wi, year, month })
         }
-        break // 该周已找到 1 号
+        break
       }
     }
   }
 
   const monthEntries = Array.from(monthMap.values())
-
-  // 同名月份只保留最后一个
   const monthCount = {}
   for (const m of monthEntries) {
     monthCount[m.month] = (monthCount[m.month] || 0) + 1
@@ -313,7 +297,8 @@ const totalActiveDays = computed(() => {
 })
 
 const avgPerWeek = computed(() => {
-  return Math.round(totalActiveDays.value / 52)
+  const total = totalActiveDays.value
+  return total > 0 ? Math.round(total / 52) : 0
 })
 
 // ==================== 学习路径 ====================
@@ -321,30 +306,37 @@ const paths = ref([])
 
 // ==================== 数据加载 ====================
 onMounted(async () => {
+  const userId = userStore.user?.id || 1
   try {
-    const statsRes = await getDashboardStats()
-    stats.value = {
-      pathCount: statsRes.pathCount || 0,
-      completedNodes: statsRes.completedNodes || 0,
-      activeDays: statsRes.activeDays || 0,
-      aiConsultCount: statsRes.aiConsultCount || 0,
-      dailyActivities: statsRes.dailyActivities || []
+    const statsData = await getDashboardStats(userId)
+    if (statsData && statsData.code === 200) {
+      stats.value = statsData.data
+      // 构建 activity map 用于热力图
+      const activityMap = new Map()
+      if (statsData.data.dailyActivities) {
+        for (const act of statsData.data.dailyActivities) {
+          activityMap.set(act.date, act.count)
+        }
+      }
+      heatmapData.value = generateHeatmapData(activityMap)
     }
-    heatmapData.value = generateHeatmapData(stats.value.dailyActivities)
-  } catch (err) {
-    console.error('获取仪表盘数据失败', err)
+  } catch (e) {
+    console.error('获取 Dashboard 数据失败:', e)
   }
 
   try {
-    const pathsRes = await getLearningPaths()
-    paths.value = (pathsRes || []).map(p => ({
-      name: p.name,
-      progress: p.progress || 0,
-      nodes: p.nodes || p.nodeCount || 0,
-      updateTime: p.updateTime || p.updatedAt || ''
-    }))
-  } catch (err) {
-    console.error('获取学习路径失败', err)
+    const pathData = await getLearningPaths(userId)
+    if (pathData && pathData.code === 200 && pathData.data) {
+      paths.value = pathData.data.map(p => ({
+        id: p.id,
+        name: p.pathName,
+        nodes: p.nodesJson ? JSON.parse(p.nodesJson).length : 0,
+        progress: p.nodesJson ? Math.round((p.currentNodeIndex / JSON.parse(p.nodesJson).length) * 100) : 0,
+        updateTime: p.updatedAt ? p.updatedAt.slice(0, 10) : ''
+      }))
+    }
+  } catch (e) {
+    console.error('获取学习路径数据失败:', e)
   }
 })
 </script>

@@ -28,7 +28,8 @@ public class LearningPathServiceImpl extends ServiceImpl<LearningPathsMapper, Le
     @Override
     public List<LearningPaths> listByUserId(Long userId) {
         LambdaQueryWrapper<LearningPaths> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(LearningPaths::getUserId, userId).orderByDesc(LearningPaths::getUpdatedAt);
+        wrapper.eq(LearningPaths::getUserId, userId)
+                .orderByDesc(LearningPaths::getUpdatedAt);
         return baseMapper.selectList(wrapper);
     }
 
@@ -40,7 +41,8 @@ public class LearningPathServiceImpl extends ServiceImpl<LearningPathsMapper, Le
     @Override
     public void updateProgress(Long pathId, Integer nodeIndex) {
         LambdaUpdateWrapper<LearningPaths> wrapper = new LambdaUpdateWrapper<>();
-        wrapper.eq(LearningPaths::getId, pathId).set(LearningPaths::getCurrentNodeIndex, nodeIndex);
+        wrapper.eq(LearningPaths::getId, pathId)
+                .set(LearningPaths::getCurrentNodeIndex, nodeIndex);
         baseMapper.update(wrapper);
         log.info("更新学习路径进度成功, pathId: {}, nodeIndex: {}", pathId, nodeIndex);
     }

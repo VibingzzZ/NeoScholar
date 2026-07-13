@@ -21,6 +21,9 @@ public class JwtUtil {
         this.expirationMs = expirationMs;
     }
 
+    /**
+     * 生成 JWT Token
+     */
     public String generateToken(Long userId, String username) {
         Date now = new Date();
         return Jwts.builder()
@@ -32,14 +35,25 @@ public class JwtUtil {
                 .compact();
     }
 
+    /**
+     * 从 Token 中解析用户 ID
+     */
     public Long getUserIdFromToken(String token) {
-        return Long.valueOf(parseToken(token).getSubject());
+        Claims claims = parseToken(token);
+        return Long.valueOf(claims.getSubject());
     }
 
+    /**
+     * 从 Token 中解析用户名
+     */
     public String getUsernameFromToken(String token) {
-        return parseToken(token).get("username", String.class);
+        Claims claims = parseToken(token);
+        return claims.get("username", String.class);
     }
 
+    /**
+     * 验证 Token 是否有效
+     */
     public boolean validateToken(String token) {
         try {
             parseToken(token);
@@ -50,6 +64,10 @@ public class JwtUtil {
     }
 
     private Claims parseToken(String token) {
-        return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }

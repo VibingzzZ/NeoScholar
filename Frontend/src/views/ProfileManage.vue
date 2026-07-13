@@ -142,6 +142,9 @@ import { UserFilled, ArrowRight } from '@element-plus/icons-vue'
 import { listProfiles, createProfile, updateProfile } from '@/api/profile'
 import { useUserStore } from '@/stores/user'
 
+const userStore = useUserStore()
+const userId = computed(() => userStore.user?.id || 1)
+
 const currentId = ref(null)
 const currentProfile = ref(null)
 const dialogVisible = ref(false)
@@ -162,16 +165,22 @@ const newForm = reactive({
 })
 
 const profiles = ref([])
-const userId = computed(() => useUserStore().user?.id || 1)
 
+// 加载画像列表
 async function loadProfiles() {
   try {
     const res = await listProfiles(userId.value)
-    profiles.value = res || []
-  } catch {
-    ElMessage.error('加载画像列表失败')
+    if (res && res.code === 200 && res.data) {
+      profiles.value = res.data
+    }
+  } catch (e) {
+    console.error('加载画像列表失败:', e)
   }
 }
+
+onMounted(() => {
+  loadProfiles()
+})
 
 function selectProfile(profile) {
   currentId.value = profile.id
@@ -189,11 +198,16 @@ function selectProfile(profile) {
 async function saveProfile() {
   if (!currentProfile.value) return
   try {
-    await updateProfile(currentProfile.value.id, { ...editForm })
-    ElMessage.success('画像保存成功')
-    await loadProfiles()
-  } catch {
-    ElMessage.error('保存失败')
+    const data = { ...editForm, id: currentProfile.value.id, userId: currentProfile.value.userId }
+    const res = await updateProfile(data)
+    if (res && res.code === 200) {
+      Object.assign(currentProfile.value, { ...editForm, updateAt: new Date().toISOString().slice(0, 10) })
+      ElMessage.success('画像保存成功')
+    } else {
+      ElMessage.error(res?.message || '保存失败')
+    }
+  } catch (e) {
+    ElMessage.error('保存失败，请检查网络')
   }
 }
 
@@ -216,26 +230,27 @@ async function createNewProfile() {
     return
   }
   try {
-    await createProfile({
+    const data = {
       userId: userId.value,
       majorOrField: newForm.majorOrField,
       learningGoal: newForm.learningGoal,
-      cognitiveStyle: newForm.cognitiveStyle,
       knowledgeBase: '',
+      cognitiveStyle: newForm.cognitiveStyle,
       commonMistakes: '',
       interactionPreference: '详细讲解'
-    })
-    dialogVisible.value = false
-    ElMessage.success('画像创建成功')
-    await loadProfiles()
-  } catch {
-    ElMessage.error('创建失败')
+    }
+    const res = await createProfile(data)
+    if (res && res.code === 200) {
+      dialogVisible.value = false
+      ElMessage.success('画像创建成功')
+      await loadProfiles()
+    } else {
+      ElMessage.error(res?.message || '创建失败')
+    }
+  } catch (e) {
+    ElMessage.error('创建失败，请检查网络')
   }
 }
-
-onMounted(() => {
-  loadProfiles()
-})
 </script>
 
 <style scoped lang="scss">

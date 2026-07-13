@@ -7,6 +7,7 @@ const http = axios.create({
   headers: { 'Content-Type': 'application/json' }
 })
 
+// 请求拦截器：自动携带 JWT Token
 http.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
@@ -18,6 +19,7 @@ http.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
+// 响应拦截器：处理 401 未授权
 http.interceptors.response.use(
   (response) => response,
   (error) => {

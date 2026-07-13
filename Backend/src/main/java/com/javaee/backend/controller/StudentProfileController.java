@@ -9,14 +9,20 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 学生画像 CRUD 接口
+ */
 @Slf4j
 @RestController
-@RequestMapping("api/user/profile")
+@RequestMapping("/api/user/profile")
 public class StudentProfileController {
 
     @Autowired
     private StudentProfileService studentProfileService;
 
+    /**
+     * 查询画像详情
+     */
     @PostMapping("/detail/{id}")
     public Result<StudentProfile> getProfile(@PathVariable Long id) {
         StudentProfile profile = studentProfileService.getById(id);
@@ -26,11 +32,18 @@ public class StudentProfileController {
         return Result.success(profile);
     }
 
+    /**
+     * 查询用户的所有画像列表
+     */
     @GetMapping("/list/{userId}")
     public Result<List<StudentProfile>> listProfiles(@PathVariable Long userId) {
-        return Result.success(studentProfileService.listByUserId(userId));
+        List<StudentProfile> profiles = studentProfileService.listByUserId(userId);
+        return Result.success(profiles);
     }
 
+    /**
+     * 创建画像
+     */
     @PostMapping("/create")
     public Result<StudentProfile> createProfile(@RequestBody StudentProfile profile) {
         log.info("创建学生画像, userId: {}", profile.getUserId());
@@ -38,6 +51,9 @@ public class StudentProfileController {
         return Result.success(profile);
     }
 
+    /**
+     * 更新画像
+     */
     @PostMapping("/update")
     public Result<StudentProfile> updateProfile(@RequestBody StudentProfile profile) {
         log.info("更新学生画像, id: {}", profile.getId());

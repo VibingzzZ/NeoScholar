@@ -23,7 +23,8 @@ public class StudentProfileServiceImpl extends ServiceImpl<ProfileMergeMapper, S
     @Override
     public List<StudentProfile> listByUserId(Long userId) {
         LambdaQueryWrapper<StudentProfile> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(StudentProfile::getUserId, userId).orderByDesc(StudentProfile::getUpdateAt);
+        wrapper.eq(StudentProfile::getUserId, userId)
+                .orderByDesc(StudentProfile::getUpdateAt);
         return baseMapper.selectList(wrapper);
     }
 

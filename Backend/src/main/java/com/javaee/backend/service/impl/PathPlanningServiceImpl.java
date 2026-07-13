@@ -41,7 +41,7 @@ public class PathPlanningServiceImpl extends ServiceImpl<PathPlanningMapper, Lea
     @Override
     public Long generateAndSavePath(StudentProfile profile) {
         //判断学生档案是否为空
-        if(profile == null) {
+        if (profile == null) {
             log.warn("学生档案为空,无法生成学生路径");
             return null;
         }
@@ -57,7 +57,7 @@ public class PathPlanningServiceImpl extends ServiceImpl<PathPlanningMapper, Lea
             //调用大模型生成路径
 
             String pathJson = pathPlanningAIService.evaluatePath(major, goal, knowledge);
-            if(pathJson == null || pathJson.trim().isEmpty()){
+            if (pathJson == null || pathJson.trim().isEmpty()) {
                 log.warn("大模型生成的学习路径为空,无法保存");
                 return null;
             }
@@ -65,7 +65,7 @@ public class PathPlanningServiceImpl extends ServiceImpl<PathPlanningMapper, Lea
             List<LearningPathNodeDTO> pathNodes = objectMapper.readValue(pathJson,
                     objectMapper.getTypeFactory().constructCollectionType(List.class, LearningPathNodeDTO.class));
 
-            if(pathNodes.isEmpty()){
+            if (pathNodes.isEmpty()) {
                 log.warn("大模型生成的学习路径节点为空,无法保存");
                 return null;
             }
@@ -78,9 +78,10 @@ public class PathPlanningServiceImpl extends ServiceImpl<PathPlanningMapper, Lea
             path.setStatus(1);
             path.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
 
+            // 保存路径到数据库
             pathPlanningMapper.insert(path);
-
             log.info("成功为用户{}生成包含{}个节点的专属学习路径", profile.getUserId(), pathNodes.size());
+            // 返回生成的路径ID
             return path.getId();
         } catch (Exception e) {
             log.error("生成学习路径时发生错误", e);

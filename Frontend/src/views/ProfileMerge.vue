@@ -192,22 +192,15 @@ import { Connection, Document, MagicStick } from '@element-plus/icons-vue'
 import { listProfiles, mergeProfiles, getProfile } from '@/api/profile'
 import { useUserStore } from '@/stores/user'
 
+const userStore = useUserStore()
+const userId = computed(() => userStore.user?.id || 1)
+
 const originalId = ref(null)
 const targetId = ref(null)
 const merging = ref(false)
 const mergedResult = ref(null)
 
 const availableProfiles = ref([])
-
-async function loadProfiles() {
-  try {
-    const userId = useUserStore().user?.id || 1
-    const res = await listProfiles(userId)
-    availableProfiles.value = res || []
-  } catch {
-    ElMessage.error('加载画像列表失败')
-  }
-}
 
 const originalProfile = computed(() =>
   availableProfiles.value.find((p) => p.id === originalId.value)
@@ -217,71 +210,89 @@ const targetProfile = computed(() =>
   availableProfiles.value.find((p) => p.id === targetId.value)
 )
 
-const mergeHistory = ref([
-  {
-    id: 1, originalId: 1, targetId: 2,
-    resultSummary: '合并了软件工程与计算机科学画像，形成综合后端开发学习方案',
-    time: '2026-06-08 14:30',
-    status: 'success'
-  },
-  {
-    id: 2, originalId: 1, targetId: 3,
-    resultSummary: '将后端开发画像与数据科学画像融合',
-    time: '2026-06-07 10:15',
-    status: 'success'
-  }
-])
+const mergeHistory = ref([])
 
-async function doMerge() {
-  if (originalId.value === targetId.value) {
-    ElMessage.warning('请选择两份不同的画像')
-    return
-  }
-  merging.value = true
+// 加载可用画像列表
+async function loadProfiles() {
   try {
-    await mergeProfiles(originalId.value, targetId.value)
-    await pollMergedResult()
-    ElMessage.success('画像合并完成！')
-  } catch {
-    ElMessage.error('合并失败')
-  } finally {
-    merging.value = false
-  }
-}
-
-async function pollMergedResult(maxAttempts = 30, interval = 1000) {
-  const original = originalProfile.value
-  for (let i = 0; i < maxAttempts; i++) {
-    await new Promise(resolve => setTimeout(resolve, interval))
-    const res = await getProfile(targetId.value)
-    if (res && (!original || res.updateAt !== original.updateAt)) {
-      mergedResult.value = res
-      return
+    const res = await listProfiles(userId.value)
+    if (res && res.code === 200 && res.data) {
+      availableProfiles.value = res.data
     }
-  }
-  ElMessage.warning('合并结果获取超时')
-}
-
-async function applyMerge() {
-  try {
-    mergeHistory.value.unshift({
-      id: mergeHistory.value.length + 1,
-      originalId: originalId.value,
-      targetId: targetId.value,
-      resultSummary: mergedResult.value.learningGoal.slice(0, 30) + '...',
-      time: new Date().toLocaleString('zh-CN'),
-      status: 'success'
-    })
-    await loadProfiles()
-    ElMessage.success('合并结果已应用')
-  } catch {
-    ElMessage.error('应用失败')
+  } catch (e) {
+    console.error('加载画像列表失败:', e)
   }
 }
 
 onMounted(() => {
   loadProfiles()
 })
+
+async function doMerge() {
+  if (!originalId.value || !targetId.value) {
+    ElMessage.warning('请选择两份画像')
+    return
+  }
+  if (originalId.value === targetId.value) {
+    ElMessage.warning('请选择两份不同的画像')
+    return
+  }
+  merging.value = true
+  mergedResult.value = null
+  try {
+    const res = await mergeProfiles(originalId.value, targetId.value)
+    if (res && res.code === 200) {
+      ElMessage.success('合并任务已提交，AI 正在后台处理...')
+      // 轮询获取合并结果（最多等待 30 秒）
+      const mergedProfile = await pollMergedResult(originalId.value, 30)
+      if (mergedProfile) {
+        mergedResult.value = mergedProfile
+        // 添加到合并历史
+        mergeHistory.value.unshift({
+          id: mergeHistory.value.length + 1,
+          originalId: originalId.value,
+          targetId: targetId.value,
+          resultSummary: (mergedProfile.learningGoal || '').slice(0, 30) + '...',
+          time: new Date().toLocaleString('zh-CN'),
+          status: 'success'
+        })
+        ElMessage.success('画像合并完成！')
+      } else {
+        ElMessage.info('合并处理中，请稍后刷新画像列表查看结果')
+      }
+    } else {
+      ElMessage.error(res?.message || '合并失败')
+    }
+  } catch (e) {
+    ElMessage.error('合并请求失败，请检查网络')
+  } finally {
+    merging.value = false
+  }
+}
+
+// 轮询等待合并结果
+async function pollMergedResult(profileId, maxSeconds) {
+  for (let i = 0; i < maxSeconds; i++) {
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    try {
+      const res = await getProfile(profileId)
+      if (res && res.code === 200 && res.data) {
+        // 检查画像是否已被更新（updateAt 变化）
+        const original = availableProfiles.value.find(p => p.id === profileId)
+        if (original && res.data.updateAt !== original.updateAt) {
+          return res.data
+        }
+      }
+    } catch {}
+  }
+  return null
+}
+
+function applyMerge() {
+  ElMessage.success('合并结果已保存到画像中')
+  // 刷新画像列表
+  loadProfiles()
+}
 </script>
 
 <style scoped lang="scss">

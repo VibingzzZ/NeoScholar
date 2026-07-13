@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.javaee.backend.AIService.ProfileMergeAIService;
 import com.javaee.backend.po.dto.MergedProfileDTO;
-import com.javaee.backend.po.dto.Profile;
+import com.javaee.backend.entity.Profile;
 import com.javaee.backend.entity.StudentProfile;
 import com.javaee.backend.mapper.ProfileMergeMapper;
 import lombok.extern.slf4j.Slf4j;

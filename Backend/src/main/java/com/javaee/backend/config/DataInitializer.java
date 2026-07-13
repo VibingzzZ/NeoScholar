@@ -11,6 +11,9 @@ import org.springframework.stereotype.Component;
 
 import java.sql.Timestamp;
 
+/**
+ * 初始化默认测试用户
+ */
 @Slf4j
 @Component
 public class DataInitializer implements CommandLineRunner {

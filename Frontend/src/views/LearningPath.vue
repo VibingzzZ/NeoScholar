@@ -103,23 +103,14 @@ import { Refresh, Check, MapLocation } from '@element-plus/icons-vue'
 import { getLearningPaths, updateProgress, generatePath } from '@/api/path'
 import { useUserStore } from '@/stores/user'
 
-const activeTab = ref('1')
+const userStore = useUserStore()
+const userId = computed(() => userStore.user?.id || 1)
+
+const activeTab = ref('')
 const selectedNodeIndex = ref(0)
+const loading = ref(false)
 
 const learningPaths = ref([])
-
-async function loadPaths() {
-  try {
-    const userId = useUserStore().user?.id || 1
-    const res = await getLearningPaths(userId)
-    learningPaths.value = res || []
-    if (res && res.length > 0) {
-      activeTab.value = String(res[0].id)
-    }
-  } catch {
-    ElMessage.error('加载学习路径失败')
-  }
-}
 
 const currentPath = computed(() =>
   learningPaths.value.find((p) => String(p.id) === activeTab.value)
@@ -128,7 +119,9 @@ const currentPath = computed(() =>
 const currentNodeList = computed(() => {
   if (!currentPath.value) return []
   try {
-    return JSON.parse(currentPath.value.nodesJson)
+    return typeof currentPath.value.nodesJson === 'string'
+      ? JSON.parse(currentPath.value.nodesJson)
+      : currentPath.value.nodesJson
   } catch {
     return []
   }
@@ -140,7 +133,7 @@ const progressPercent = computed(() => {
 })
 
 const totalDays = computed(() =>
-  currentNodeList.value.reduce((sum, n) => sum + n.estimatedDays, 0)
+  currentNodeList.value.reduce((sum, n) => sum + (n.estimatedDays || 0), 0)
 )
 
 function selectNode(index) {
@@ -149,23 +142,48 @@ function selectNode(index) {
 
 async function completeNode(index) {
   if (!currentPath.value || index !== currentPath.value.currentNodeIndex) return
+  const newIndex = index + 1
   try {
-    await updateProgress(currentPath.value.id, index + 1)
-    currentPath.value.currentNodeIndex++
-    ElMessage.success('节点已完成，继续加油！')
-  } catch {
-    ElMessage.error('更新进度失败')
+    const res = await updateProgress(currentPath.value.id, newIndex)
+    if (res && res.code === 200) {
+      currentPath.value.currentNodeIndex = newIndex
+      ElMessage.success('节点已完成，继续加油！')
+    } else {
+      ElMessage.error(res?.message || '更新失败')
+    }
+  } catch (e) {
+    ElMessage.error('更新进度失败，请检查网络')
   }
 }
 
 async function regeneratePath() {
+  loading.value = true
   try {
-    ElMessage.info('正在重新生成学习路径...')
-    await generatePath(useUserStore().user?.id || 1)
-    ElMessage.success('学习路径已重新生成')
-    await loadPaths()
-  } catch {
-    ElMessage.error('重新生成失败')
+    const res = await generatePath(userId.value)
+    if (res && res.code === 200) {
+      ElMessage.success('学习路径已重新生成')
+      await loadPaths()
+    } else {
+      ElMessage.error(res?.message || '生成失败，请确认已创建学生画像')
+    }
+  } catch (e) {
+    ElMessage.error('生成失败，请检查网络')
+  } finally {
+    loading.value = false
+  }
+}
+
+async function loadPaths() {
+  try {
+    const res = await getLearningPaths(userId.value)
+    if (res && res.code === 200 && res.data) {
+      learningPaths.value = res.data
+      if (res.data.length > 0 && !activeTab.value) {
+        activeTab.value = String(res.data[0].id)
+      }
+    }
+  } catch (e) {
+    console.error('加载学习路径失败:', e)
   }
 }
 

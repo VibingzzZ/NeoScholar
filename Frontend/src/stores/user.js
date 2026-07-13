@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 export const useUserStore = defineStore('user', () => {
+  // 从 localStorage 恢复登录态
   const savedToken = localStorage.getItem('token')
   const savedUser = (() => {
     try { return JSON.parse(localStorage.getItem('user') || 'null') } catch { return null }

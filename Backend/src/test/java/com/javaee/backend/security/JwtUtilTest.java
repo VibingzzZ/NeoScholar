@@ -5,13 +5,19 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * JwtUtil 单元测试（无需 Spring 上下文）
+ */
 class JwtUtilTest {
 
     private JwtUtil jwtUtil;
 
     @BeforeEach
     void setUp() {
-        jwtUtil = new JwtUtil("test-secret-key-at-least-32-characters-long!!", 3600000L);
+        jwtUtil = new JwtUtil(
+                "test-secret-key-at-least-32-characters-long!!",
+                3600000L // 1 小时
+        );
     }
 
     @Test
@@ -38,6 +44,17 @@ class JwtUtilTest {
         assertFalse(jwtUtil.validateToken("invalid.token.string"));
         assertFalse(jwtUtil.validateToken(""));
         assertFalse(jwtUtil.validateToken(null));
+    }
+
+    @Test
+    void shouldRejectExpiredToken() {
+        // 创建一个即时过期的 token
+        JwtUtil shortLivedJwt = new JwtUtil(
+                "test-secret-key-at-least-32-characters-long!!",
+                -1L // 立即过期
+        );
+        String token = shortLivedJwt.generateToken(1L, "demo");
+        assertFalse(shortLivedJwt.validateToken(token));
     }
 
     @Test

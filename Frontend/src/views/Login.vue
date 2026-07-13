@@ -43,20 +43,22 @@
               <el-input
                 v-model="form.password"
                 type="password"
-                placeholder="请输入密码"
+                :placeholder="isRegister ? '请输入密码（至少6位）' : '请输入密码'"
                 :prefix-icon="Lock"
                 show-password
                 @keyup.enter="handleSubmit"
               />
             </el-form-item>
 
-            <el-form-item v-if="isRegister" prop="confirmPassword">
+            <!-- 注册模式下显示确认密码 -->
+            <el-form-item prop="confirmPassword" v-if="isRegister">
               <el-input
                 v-model="form.confirmPassword"
                 type="password"
                 placeholder="请再次输入密码"
                 :prefix-icon="Lock"
                 show-password
+                @keyup.enter="handleSubmit"
               />
             </el-form-item>
 
@@ -66,14 +68,17 @@
               </el-button>
             </el-form-item>
 
-            <div class="form-extra">
+            <div class="form-extra" v-if="!isRegister">
               <el-checkbox v-model="rememberMe">记住密码</el-checkbox>
               <a href="#">忘记密码？</a>
             </div>
           </el-form>
 
           <div class="register-link">
-            {{ isRegister ? '已有账号？' : '还没有账号？' }}<a href="#" @click.prevent="isRegister = !isRegister">{{ isRegister ? '立即登录' : '立即注册' }}</a>
+            {{ isRegister ? '已有账号？' : '还没有账号？' }}
+            <a href="#" @click.prevent="isRegister = !isRegister; form.confirmPassword = ''">
+              {{ isRegister ? '去登录' : '立即注册' }}
+            </a>
           </div>
         </div>
       </div>
@@ -86,14 +91,14 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Sunny, UserFilled, MapLocation, ChatDotRound, User, Lock } from '@element-plus/icons-vue'
-import { login as loginApi, register as registerApi } from '@/api/auth'
 import { useUserStore } from '@/stores/user'
+import { login as loginApi, register as registerApi } from '@/api/auth'
 
 const router = useRouter()
 const store = useUserStore()
 
-const form = reactive({ username: '', password: '', confirmPassword: '' })
 const isRegister = ref(false)
+const form = reactive({ username: '', password: '', confirmPassword: '' })
 const rememberMe = ref(false)
 const loading = ref(false)
 
@@ -101,13 +106,14 @@ const rules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, message: '密码长度不能少于 6 位', trigger: 'blur' }
+    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
   ],
   confirmPassword: [
-    { required: true, message: '请再次输入密码', trigger: 'blur' },
     {
       validator: (_rule, value, callback) => {
-        if (value !== form.password) {
+        if (!value) {
+          callback(new Error('请再次输入密码'))
+        } else if (value !== form.password) {
           callback(new Error('两次输入的密码不一致'))
         } else {
           callback()
@@ -121,25 +127,21 @@ const rules = {
 async function handleSubmit() {
   loading.value = true
   try {
-    if (isRegister.value) {
-      const res = await registerApi({
-        username: form.username,
-        password: form.password,
-        confirmPassword: form.confirmPassword
-      })
-      store.login(res.user, res.token)
-      ElMessage.success('注册成功，欢迎加入！')
+    const api = isRegister.value ? registerApi : loginApi
+    const res = await api(form.username, form.password)
+    if (res && res.code === 200 && res.data) {
+      const { userId, username, token } = res.data
+      store.login({ id: userId, username, avatar: '' }, token)
+      if (rememberMe.value && !isRegister.value) {
+        localStorage.setItem('rememberedUser', form.username)
+      }
+      ElMessage.success(isRegister.value ? '注册成功！' : '登录成功，欢迎回来！')
+      router.push('/dashboard')
     } else {
-      const res = await loginApi({
-        username: form.username,
-        password: form.password
-      })
-      store.login(res.user, res.token)
-      ElMessage.success('登录成功，欢迎回来！')
+      ElMessage.error(res?.message || (isRegister.value ? '注册失败' : '登录失败'))
     }
-    router.push('/dashboard')
-  } catch (err) {
-    ElMessage.error(err?.response?.data?.message || err?.message || '操作失败')
+  } catch (e) {
+    ElMessage.error(isRegister.value ? '注册失败，请检查网络连接' : '登录失败，请检查网络连接')
   } finally {
     loading.value = false
   }

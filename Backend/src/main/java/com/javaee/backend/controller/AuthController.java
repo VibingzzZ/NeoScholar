@@ -5,7 +5,7 @@ import com.javaee.backend.config.Result;
 import com.javaee.backend.entity.User;
 import com.javaee.backend.mapper.UserMapper;
 import com.javaee.backend.po.dto.LoginRequest;
-import com.javaee.backend.po.dto.LoginResponse;
+import com.javaee.backend.po.vo.LoginResponse;
 import com.javaee.backend.security.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +26,9 @@ public class AuthController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    /**
+     * 用户登录
+     */
     @PostMapping("/login")
     public Result<LoginResponse> login(@RequestBody LoginRequest request) {
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
@@ -38,9 +41,13 @@ public class AuthController {
 
         String token = jwtUtil.generateToken(user.getId(), user.getUsername());
         log.info("用户 {} 登录成功", user.getUsername());
+
         return Result.success(new LoginResponse(user.getId(), user.getUsername(), token));
     }
 
+    /**
+     * 用户注册
+     */
     @PostMapping("/register")
     public Result<LoginResponse> register(@RequestBody LoginRequest request) {
         if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
@@ -62,6 +69,7 @@ public class AuthController {
         userMapper.insert(user);
 
         log.info("新用户注册成功: {}", user.getUsername());
+
         String token = jwtUtil.generateToken(user.getId(), user.getUsername());
         return Result.success(new LoginResponse(user.getId(), user.getUsername(), token));
     }
