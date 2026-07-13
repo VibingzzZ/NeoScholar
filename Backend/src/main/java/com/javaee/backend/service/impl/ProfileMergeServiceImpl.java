@@ -3,20 +3,14 @@ package com.javaee.backend.service.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.javaee.backend.AIService.ProfileMergeAIService;
-import com.javaee.backend.config.AsyncConfig;
 import com.javaee.backend.po.dto.MergedProfileDTO;
 import com.javaee.backend.po.dto.Profile;
 import com.javaee.backend.entity.StudentProfile;
 import com.javaee.backend.mapper.ProfileMergeMapper;
-import dev.langchain4j.internal.Json;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.w3c.dom.Document;
-import org.w3c.dom.Text;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.sql.Timestamp;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -61,19 +55,19 @@ public class ProfileMergeServiceImpl extends ServiceImpl<ProfileMergeMapper, Stu
 
             Profile original = new Profile(
                     getStringValue(originalProfile.getMajorOrField()),
-                    getTextValue(originalProfile.getLearningGoal()),
-                    getTextValue(originalProfile.getKnowledgeBase()),
+                    getStringValue(originalProfile.getLearningGoal()),
+                    getStringValue(originalProfile.getKnowledgeBase()),
                     getStringValue(originalProfile.getCognitiveStyle()),
-                    getJsonValue(originalProfile.getCommonMistakes()),
+                    getStringValue(originalProfile.getCommonMistakes()),
                     getStringValue(originalProfile.getInteractionPreference())
             );
 
             Profile newProf = new Profile(
                     getStringValue(newProfile.getMajorOrField()),
-                    getTextValue(newProfile.getLearningGoal()),
-                    getTextValue(newProfile.getKnowledgeBase()),
+                    getStringValue(newProfile.getLearningGoal()),
+                    getStringValue(newProfile.getKnowledgeBase()),
                     getStringValue(newProfile.getCognitiveStyle()),
-                    getJsonValue(newProfile.getCommonMistakes()),
+                    getStringValue(newProfile.getCommonMistakes()),
                     getStringValue(newProfile.getInteractionPreference())
             );
 
@@ -85,10 +79,10 @@ public class ProfileMergeServiceImpl extends ServiceImpl<ProfileMergeMapper, Stu
             updateProfile.setId(id);
             updateProfile.setUserId(originalProfile.getUserId());
             updateProfile.setMajorOrField(mergedProfile.getMajorOrField());
-            updateProfile.setLearningGoal(createText(mergedProfile.getLearningGoal()));
-            updateProfile.setKnowledgeBase(createText(mergedProfile.getKnowledgeBase()));
+            updateProfile.setLearningGoal(mergedProfile.getLearningGoal());
+            updateProfile.setKnowledgeBase(mergedProfile.getKnowledgeBase());
             updateProfile.setCognitiveStyle(mergedProfile.getCognitiveStyle());
-            updateProfile.setCommonMistakes(createJson(mergedProfile.getCommonMistakes()));
+            updateProfile.setCommonMistakes(mergedProfile.getCommonMistakes());
             updateProfile.setInteractionPreference(mergedProfile.getInteractionPreference());
             updateProfile.setUpdateAt(new Timestamp(System.currentTimeMillis()));
 
@@ -109,41 +103,5 @@ public class ProfileMergeServiceImpl extends ServiceImpl<ProfileMergeMapper, Stu
 
     private String getStringValue(String value) {
         return value != null ? value : "";
-    }
-
-    private String getTextValue(Text text) {
-        return text != null ? text.getData() : "";
-    }
-
-    private String getJsonValue(dev.langchain4j.internal.Json json) {
-        return json != null ? json.toString() : "{}";
-    }
-
-    private Text createText(String content) {
-        if (content == null || content.trim().isEmpty()) {
-            return null;
-        }
-        Document doc = null;
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            doc = builder.newDocument();
-        } catch (Exception e) {
-            log.error("创建Text对象时发生错误", e);
-            return null;
-        }
-        return doc.createTextNode(content);
-    }
-
-    private Json createJson(String jsonString) {
-        if (jsonString == null || jsonString.trim().isEmpty()) {
-            return null;
-        }
-        try {
-            return objectMapper.readValue(jsonString, Json.class);
-        } catch (Exception e) {
-            log.error("创建Json对象时发生错误: {}", jsonString, e);
-            return null;
-        }
     }
 }
