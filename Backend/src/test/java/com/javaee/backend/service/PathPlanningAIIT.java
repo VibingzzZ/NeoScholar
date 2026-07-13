@@ -11,11 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.w3c.dom.Document;
-import org.w3c.dom.Text;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.sql.Timestamp;
 import java.util.List;
 
@@ -97,8 +93,8 @@ class PathPlanningAIIT {
         profile.setId(1L);
         profile.setUserId(100L);
         profile.setMajorOrField("计算机科学");
-        profile.setLearningGoal(createText("掌握人工智能基础"));
-        profile.setKnowledgeBase(createText("Python, 数据结构, 算法"));
+        profile.setLearningGoal("掌握人工智能基础");
+        profile.setKnowledgeBase("Python, 数据结构, 算法");
         profile.setCognitiveStyle("逻辑思维");
         profile.setInteractionPreference("文字交流");
         profile.setUpdateAt(new Timestamp(System.currentTimeMillis()));
@@ -123,18 +119,6 @@ class PathPlanningAIIT {
         } catch (Exception e) {
             System.out.println("✗ 路径生成失败: " + e.getMessage());
             e.printStackTrace();
-        }
-    }
-
-    private Text createText(String content) {
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            Document doc = builder.newDocument();
-            return doc.createTextNode(content);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
         }
     }
 }
