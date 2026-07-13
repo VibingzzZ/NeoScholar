@@ -5,14 +5,20 @@ import com.javaee.backend.entity.LearningResource;
 import com.javaee.backend.mapper.LearningPathsMapper;
 import com.javaee.backend.mapper.LearningResourceMapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 
+import org.junit.jupiter.api.Tag;
+
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+
 @SpringBootTest
-class ResourceOrchestratorAITest {
+@Tag("ai")
+class ResourceOrchestratorAIIT {
 
     @Autowired
     private ResourceOrchestratorService orchestratorService;
@@ -22,6 +28,13 @@ class ResourceOrchestratorAITest {
 
     @Autowired
     private LearningResourceMapper learningResourceMapper;
+
+    @BeforeEach
+    void checkApiKey() {
+        String apiKey = System.getenv("QWEN_API_KEY");
+        assumeTrue(apiKey != null && apiKey.startsWith("sk-"),
+                "跳过：未设置有效的 QWEN_API_KEY 环境变量");
+    }
 
     @Test
     void testGenerateResource() throws Exception {

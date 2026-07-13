@@ -2,7 +2,7 @@ name: Main CI/CD - Full Pipeline
 
 on:
   push:
-    branches: [ main, feature/CI_CD ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -73,7 +73,7 @@ jobs:
 
       - name: Run Backend Tests
         env:
-          QWEN_API_KEY: ${{ secrets.QWEN_API_KEY }}
+          QWEN_API_KEY: ${{ secrets.QWEN_API_KEY || 'sk-ci-dummy' }}
           SPRING_PROFILES_ACTIVE: ci
         run: mvn verify -B
 

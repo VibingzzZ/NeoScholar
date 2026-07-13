@@ -4,12 +4,14 @@ import com.javaee.backend.service.ResourceOrchestratorService;
 import dev.langchain4j.agent.tool.Tool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 @Slf4j
-@Service
+@Service("GenerateTools")
 public class GenerateTools {
 
+    @Lazy
     @Autowired
     private ResourceOrchestratorService resourceOrchestratorService;
 
