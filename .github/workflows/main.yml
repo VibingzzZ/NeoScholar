@@ -119,24 +119,45 @@ jobs:
           retention-days: 7
 
   # ============================================================
-  # CD stage: Deploy (placeholder - configure as needed)
+  # CD stage: Deploy via Docker
   # ============================================================
-  # deploy:
-  #   name: Deploy to Production
-  #   needs: [backend-test, frontend-build]
-  #   runs-on: ubuntu-latest
-  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-  #   steps:
-  #     - name: Download Backend Artifact
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: backend-jar
-  #     - name: Download Frontend Artifact
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: frontend-dist
-  #     - name: Deploy to Server
-  #       run: |
-  #         # TODO: Add your deployment script here
-  #         # e.g., scp, rsync, or use SSH to deploy to your server
-  #         echo "Deployment not configured yet."
+  deploy:
+    name: Deploy to Production
+    needs: [backend-test, frontend-build]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Backend Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-jar
+          path: Backend/target
+
+      - name: Download Frontend Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: Frontend/dist
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Image
+        run: |
+          docker build -t neoscholar:latest .
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /opt/neoscholar
+            docker compose down
+            docker compose pull
+            docker compose up -d
+            echo "Deployment completed."

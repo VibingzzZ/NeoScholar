@@ -51,6 +51,18 @@ const router = createRouter({
 
 router.beforeEach((to, _from, next) => {
   document.title = to.meta.title || 'NeoScholar 智能学伴'
+
+  const token = localStorage.getItem('token')
+  // 未登录用户只能访问登录页
+  if (!token && to.path !== '/login') {
+    next('/login')
+    return
+  }
+  // 已登录用户访问登录页则跳转到仪表盘
+  if (token && to.path === '/login') {
+    next('/dashboard')
+    return
+  }
   next()
 })
 

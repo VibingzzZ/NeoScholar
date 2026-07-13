@@ -1,5 +1,6 @@
 import { ref, onUnmounted } from 'vue'
 import { createChatStream } from '@/api/chat'
+import { useUserStore } from '@/stores/user'
 
 export function useChat() {
   const messages = ref([])
@@ -22,9 +23,13 @@ export function useChat() {
     loading.value = true
     currentReply.value = ''
 
+    const userStore = useUserStore()
+    const userId = userStore.user?.id || 1
+
     controller = createChatStream(
       question,
       chatId,
+      userId,
       (token) => {
         currentReply.value += token
       },

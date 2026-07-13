@@ -10,29 +10,25 @@
       <el-col :span="6">
         <div class="stat-card">
           <div class="stat-label">学习路径数</div>
-          <div class="stat-value">3</div>
-          <div class="stat-change up">↑ 1 条新路径</div>
+          <div class="stat-value">{{ stats.pathCount }}</div>
         </div>
       </el-col>
       <el-col :span="6">
         <div class="stat-card">
           <div class="stat-label">已完成节点</div>
-          <div class="stat-value">12</div>
-          <div class="stat-change up">↑ 本周完成 4 个</div>
+          <div class="stat-value">{{ stats.completedNodes }}</div>
         </div>
       </el-col>
       <el-col :span="6">
         <div class="stat-card">
           <div class="stat-label">学习天数</div>
-          <div class="stat-value">28</div>
-          <div class="stat-change up">连续学习中</div>
+          <div class="stat-value">{{ stats.activeDays }}</div>
         </div>
       </el-col>
       <el-col :span="6">
         <div class="stat-card">
           <div class="stat-label">AI 辅导次数</div>
-          <div class="stat-value">47</div>
-          <div class="stat-change">今日已对话 3 次</div>
+          <div class="stat-value">{{ stats.aiConsultCount }}</div>
         </div>
       </el-col>
     </el-row>
@@ -163,8 +159,16 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { UserFilled, Connection, MapLocation, ChatDotRound } from '@element-plus/icons-vue'
+import { getDashboardStats } from '@/api/dashboard'
+import { getLearningPaths } from '@/api/path'
+import { useUserStore } from '@/stores/user'
+
+const userStore = useUserStore()
+
+// ==================== 统计数据 ====================
+const stats = ref({ pathCount: 0, completedNodes: 0, activeDays: 0, aiConsultCount: 0, dailyActivities: [] })
 
 // ==================== 热力图数据 ====================
 const dayLabels = ['周一', '周三', '周五', '周日']
@@ -186,37 +190,15 @@ function hideTooltip() {
   tooltip.value.visible = false
 }
 
-function generateHeatmapData() {
+function generateHeatmapData(activityMap) {
   const now = new Date()
   const yearAgo = new Date(now)
   yearAgo.setFullYear(yearAgo.getFullYear() - 1)
   yearAgo.setDate(yearAgo.getDate() + 1)
 
-  // 生成一年每天的 mock 学习次数（0-20）
-  const activityMap = new Map()
-  let cursor = new Date(yearAgo)
-  while (cursor <= now) {
-    const key = cursor.toISOString().slice(0, 10)
-
-    // 模拟真实分布：工作日较多，周末较少，近期更多
-    const dayOfWeek = cursor.getDay()
-    const daysAgo = Math.floor((now - cursor) / (1000 * 60 * 60 * 24))
-    let base = dayOfWeek === 0 || dayOfWeek === 6 ? 2 : 8
-    base += Math.max(0, 20 - daysAgo) * 0.3
-    const count = Math.max(0, Math.min(20, Math.floor(base + (Math.random() - 0.5) * 6)))
-
-    activityMap.set(key, count)
-    cursor.setDate(cursor.getDate() + 1)
-  }
-
-  // 今天固定一个值
-  activityMap.set(now.toISOString().slice(0, 10), 5)
-
-  // 转换为网格：每列是一个周（7天，从周一开始）
-  // 先定位第一天的周几
-  const startDay = yearAgo.getDay() // 0=周日
-  // 我们要对齐到周一为第一行，所以需要填充前面的空白
-  const offset = startDay === 0 ? 6 : startDay - 1 // 到周一需要偏移的天数
+  // 转换为网格：每列是一个周
+  const startDay = yearAgo.getDay()
+  const offset = startDay === 0 ? 6 : startDay - 1
 
   const weeks = []
   const firstDate = new Date(yearAgo)
@@ -224,9 +206,8 @@ function generateHeatmapData() {
 
   const dayMap = ['日', '一', '二', '三', '四', '五', '六']
 
-  let week = []
   for (let i = 0; i < 53; i++) {
-    week = []
+    const week = []
     for (let j = 0; j < 7; j++) {
       const d = new Date(firstDate)
       d.setDate(d.getDate() + i * 7 + j)
@@ -236,7 +217,7 @@ function generateHeatmapData() {
       if (count > 0 && count <= 3) level = 'level-1'
       else if (count <= 7) level = 'level-2'
       else if (count <= 12) level = 'level-3'
-      else level = 'level-4'
+      else if (count > 12) level = 'level-4'
 
       week.push({
         date: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} (周${dayMap[d.getDay()]})`,
@@ -250,7 +231,7 @@ function generateHeatmapData() {
   return weeks
 }
 
-const heatmapData = generateHeatmapData()
+const heatmapData = ref([])
 
 // 计算每个月份标签的偏移位置
 const CELL_WIDTH = 14
@@ -258,11 +239,9 @@ const CELL_GAP = 3
 const STEPS_PER_WEEK = CELL_WIDTH + CELL_GAP
 
 const monthLabelPositions = computed(() => {
-  // 扫描每个格子，找到每月 1 号所在的周
-  const monthMap = new Map() // "2025-6" → { weekIndex, year, month }
-
-  for (let wi = 0; wi < heatmapData.length; wi++) {
-    const week = heatmapData[wi]
+  const monthMap = new Map()
+  for (let wi = 0; wi < heatmapData.value.length; wi++) {
+    const week = heatmapData.value[wi]
     for (const cell of week) {
       const parts = cell.date.split('-')
       const day = parseInt(parts[2], 10)
@@ -273,14 +252,12 @@ const monthLabelPositions = computed(() => {
         if (!monthMap.has(key)) {
           monthMap.set(key, { weekIndex: wi, year, month })
         }
-        break // 该周已找到 1 号
+        break
       }
     }
   }
 
   const monthEntries = Array.from(monthMap.values())
-
-  // 同名月份只保留最后一个
   const monthCount = {}
   for (const m of monthEntries) {
     monthCount[m.month] = (monthCount[m.month] || 0) + 1
@@ -299,8 +276,8 @@ const monthLabelPositions = computed(() => {
 
 const streakDays = computed(() => {
   let streak = 0
-  for (let i = heatmapData.length - 1; i >= 0; i--) {
-    const week = heatmapData[i]
+  for (let i = heatmapData.value.length - 1; i >= 0; i--) {
+    const week = heatmapData.value[i]
     for (let j = week.length - 1; j >= 0; j--) {
       if (week[j].count > 0) streak++
       else return streak
@@ -311,7 +288,7 @@ const streakDays = computed(() => {
 
 const totalActiveDays = computed(() => {
   let total = 0
-  for (const week of heatmapData) {
+  for (const week of heatmapData.value) {
     for (const day of week) {
       if (day.count > 0) total++
     }
@@ -320,15 +297,48 @@ const totalActiveDays = computed(() => {
 })
 
 const avgPerWeek = computed(() => {
-  return Math.round(totalActiveDays.value / 52)
+  const total = totalActiveDays.value
+  return total > 0 ? Math.round(total / 52) : 0
 })
 
 // ==================== 学习路径 ====================
-const paths = ref([
-  { name: 'Java 后端开发进阶', progress: 65, nodes: 12, updateTime: '2026-06-08' },
-  { name: 'Spring Boot 微服务实战', progress: 30, nodes: 8, updateTime: '2026-06-05' },
-  { name: '数据结构与算法精讲', progress: 80, nodes: 20, updateTime: '2026-06-07' }
-])
+const paths = ref([])
+
+// ==================== 数据加载 ====================
+onMounted(async () => {
+  const userId = userStore.user?.id || 1
+  try {
+    const statsData = await getDashboardStats(userId)
+    if (statsData && statsData.code === 200) {
+      stats.value = statsData.data
+      // 构建 activity map 用于热力图
+      const activityMap = new Map()
+      if (statsData.data.dailyActivities) {
+        for (const act of statsData.data.dailyActivities) {
+          activityMap.set(act.date, act.count)
+        }
+      }
+      heatmapData.value = generateHeatmapData(activityMap)
+    }
+  } catch (e) {
+    console.error('获取 Dashboard 数据失败:', e)
+  }
+
+  try {
+    const pathData = await getLearningPaths(userId)
+    if (pathData && pathData.code === 200 && pathData.data) {
+      paths.value = pathData.data.map(p => ({
+        id: p.id,
+        name: p.pathName,
+        nodes: p.nodesJson ? JSON.parse(p.nodesJson).length : 0,
+        progress: p.nodesJson ? Math.round((p.currentNodeIndex / JSON.parse(p.nodesJson).length) * 100) : 0,
+        updateTime: p.updatedAt ? p.updatedAt.slice(0, 10) : ''
+      }))
+    }
+  } catch (e) {
+    console.error('获取学习路径数据失败:', e)
+  }
+})
 </script>
 
 <style scoped lang="scss">
