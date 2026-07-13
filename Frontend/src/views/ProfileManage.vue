@@ -129,16 +129,18 @@
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="createProfile">确认创建</el-button>
+        <el-button type="primary" @click="createNewProfile">确认创建</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { UserFilled, ArrowRight } from '@element-plus/icons-vue'
+import { listProfiles, createProfile, updateProfile } from '@/api/profile'
+import { useUserStore } from '@/stores/user'
 
 const currentId = ref(null)
 const currentProfile = ref(null)
@@ -159,30 +161,17 @@ const newForm = reactive({
   learningGoal: ''
 })
 
-const profiles = ref([
-  {
-    id: 1,
-    userId: 1,
-    majorOrField: '软件工程',
-    learningGoal: '掌握 Spring Boot 微服务开发',
-    knowledgeBase: 'Java 基础、MySQL、HTML/CSS',
-    cognitiveStyle: '逻辑分析型',
-    commonMistakes: '对并发编程理解不深',
-    interactionPreference: '详细讲解',
-    updateAt: '2026-06-08'
-  },
-  {
-    id: 2,
-    userId: 1,
-    majorOrField: '计算机科学',
-    learningGoal: '深入学习数据结构与算法',
-    knowledgeBase: 'C语言基础、基本数据结构',
-    cognitiveStyle: '实践操作型',
-    commonMistakes: '递归思想运用不熟练',
-    interactionPreference: '引导式提问',
-    updateAt: '2026-06-05'
+const profiles = ref([])
+const userId = computed(() => useUserStore().user?.id || 1)
+
+async function loadProfiles() {
+  try {
+    const res = await listProfiles(userId.value)
+    profiles.value = res || []
+  } catch {
+    ElMessage.error('加载画像列表失败')
   }
-])
+}
 
 function selectProfile(profile) {
   currentId.value = profile.id
@@ -197,11 +186,15 @@ function selectProfile(profile) {
   })
 }
 
-function saveProfile() {
-  if (currentProfile.value) {
-    Object.assign(currentProfile.value, { ...editForm, updateAt: new Date().toISOString().slice(0, 10) })
+async function saveProfile() {
+  if (!currentProfile.value) return
+  try {
+    await updateProfile(currentProfile.value.id, { ...editForm })
+    ElMessage.success('画像保存成功')
+    await loadProfiles()
+  } catch {
+    ElMessage.error('保存失败')
   }
-  ElMessage.success('画像保存成功')
 }
 
 function resetForm() {
@@ -217,26 +210,32 @@ function showCreateDialog() {
   dialogVisible.value = true
 }
 
-function createProfile() {
+async function createNewProfile() {
   if (!newForm.majorOrField) {
     ElMessage.warning('请输入专业/领域')
     return
   }
-  const newId = Math.max(...profiles.value.map((p) => p.id), 0) + 1
-  profiles.value.push({
-    id: newId,
-    userId: 1,
-    majorOrField: newForm.majorOrField,
-    learningGoal: newForm.learningGoal,
-    knowledgeBase: '',
-    cognitiveStyle: newForm.cognitiveStyle,
-    commonMistakes: '',
-    interactionPreference: '详细讲解',
-    updateAt: new Date().toISOString().slice(0, 10)
-  })
-  dialogVisible.value = false
-  ElMessage.success('画像创建成功')
+  try {
+    await createProfile({
+      userId: userId.value,
+      majorOrField: newForm.majorOrField,
+      learningGoal: newForm.learningGoal,
+      cognitiveStyle: newForm.cognitiveStyle,
+      knowledgeBase: '',
+      commonMistakes: '',
+      interactionPreference: '详细讲解'
+    })
+    dialogVisible.value = false
+    ElMessage.success('画像创建成功')
+    await loadProfiles()
+  } catch {
+    ElMessage.error('创建失败')
+  }
 }
+
+onMounted(() => {
+  loadProfiles()
+})
 </script>
 
 <style scoped lang="scss">

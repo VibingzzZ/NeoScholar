@@ -1,4 +1,4 @@
-import { post } from './index'
+import { get, post } from './index'
 
 const BASE = '/user/profile'
 
@@ -7,7 +7,11 @@ export function mergeProfiles(id, userId) {
 }
 
 export function getProfile(id) {
-  return post(`${BASE}/detail/${id}`).then((r) => r.data)
+  return post(`${BASE}/detail/${id}`)
+}
+
+export function listProfiles(userId) {
+  return get(`${BASE}/list/${userId}`)
 }
 
 export function updateProfile(data) {

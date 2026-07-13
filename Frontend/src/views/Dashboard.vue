@@ -10,28 +10,28 @@
       <el-col :span="6">
         <div class="stat-card">
           <div class="stat-label">学习路径数</div>
-          <div class="stat-value">3</div>
+          <div class="stat-value">{{ stats.pathCount }}</div>
           <div class="stat-change up">↑ 1 条新路径</div>
         </div>
       </el-col>
       <el-col :span="6">
         <div class="stat-card">
           <div class="stat-label">已完成节点</div>
-          <div class="stat-value">12</div>
+          <div class="stat-value">{{ stats.completedNodes }}</div>
           <div class="stat-change up">↑ 本周完成 4 个</div>
         </div>
       </el-col>
       <el-col :span="6">
         <div class="stat-card">
           <div class="stat-label">学习天数</div>
-          <div class="stat-value">28</div>
+          <div class="stat-value">{{ stats.activeDays }}</div>
           <div class="stat-change up">连续学习中</div>
         </div>
       </el-col>
       <el-col :span="6">
         <div class="stat-card">
           <div class="stat-label">AI 辅导次数</div>
-          <div class="stat-value">47</div>
+          <div class="stat-value">{{ stats.aiConsultCount }}</div>
           <div class="stat-change">今日已对话 3 次</div>
         </div>
       </el-col>
@@ -163,8 +163,15 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { UserFilled, Connection, MapLocation, ChatDotRound } from '@element-plus/icons-vue'
+import { getDashboardStats } from '@/api/dashboard'
+import { getLearningPaths } from '@/api/path'
+import { useUserStore } from '@/stores/user'
+
+const userStore = useUserStore()
+
+const stats = ref({ pathCount: 0, completedNodes: 0, activeDays: 0, aiConsultCount: 0, dailyActivities: [] })
 
 // ==================== 热力图数据 ====================
 const dayLabels = ['周一', '周三', '周五', '周日']
@@ -186,31 +193,17 @@ function hideTooltip() {
   tooltip.value.visible = false
 }
 
-function generateHeatmapData() {
+function generateHeatmapData(dailyActivities = []) {
   const now = new Date()
   const yearAgo = new Date(now)
   yearAgo.setFullYear(yearAgo.getFullYear() - 1)
   yearAgo.setDate(yearAgo.getDate() + 1)
 
-  // 生成一年每天的 mock 学习次数（0-20）
+  // 从 API 数据构建 activityMap
   const activityMap = new Map()
-  let cursor = new Date(yearAgo)
-  while (cursor <= now) {
-    const key = cursor.toISOString().slice(0, 10)
-
-    // 模拟真实分布：工作日较多，周末较少，近期更多
-    const dayOfWeek = cursor.getDay()
-    const daysAgo = Math.floor((now - cursor) / (1000 * 60 * 60 * 24))
-    let base = dayOfWeek === 0 || dayOfWeek === 6 ? 2 : 8
-    base += Math.max(0, 20 - daysAgo) * 0.3
-    const count = Math.max(0, Math.min(20, Math.floor(base + (Math.random() - 0.5) * 6)))
-
-    activityMap.set(key, count)
-    cursor.setDate(cursor.getDate() + 1)
+  for (const item of dailyActivities) {
+    activityMap.set(item.date, item.count)
   }
-
-  // 今天固定一个值
-  activityMap.set(now.toISOString().slice(0, 10), 5)
 
   // 转换为网格：每列是一个周（7天，从周一开始）
   // 先定位第一天的周几
@@ -236,7 +229,7 @@ function generateHeatmapData() {
       if (count > 0 && count <= 3) level = 'level-1'
       else if (count <= 7) level = 'level-2'
       else if (count <= 12) level = 'level-3'
-      else level = 'level-4'
+      else if (count > 12) level = 'level-4'
 
       week.push({
         date: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} (周${dayMap[d.getDay()]})`,
@@ -250,7 +243,7 @@ function generateHeatmapData() {
   return weeks
 }
 
-const heatmapData = generateHeatmapData()
+const heatmapData = ref([])
 
 // 计算每个月份标签的偏移位置
 const CELL_WIDTH = 14
@@ -261,8 +254,8 @@ const monthLabelPositions = computed(() => {
   // 扫描每个格子，找到每月 1 号所在的周
   const monthMap = new Map() // "2025-6" → { weekIndex, year, month }
 
-  for (let wi = 0; wi < heatmapData.length; wi++) {
-    const week = heatmapData[wi]
+  for (let wi = 0; wi < heatmapData.value.length; wi++) {
+    const week = heatmapData.value[wi]
     for (const cell of week) {
       const parts = cell.date.split('-')
       const day = parseInt(parts[2], 10)
@@ -299,8 +292,8 @@ const monthLabelPositions = computed(() => {
 
 const streakDays = computed(() => {
   let streak = 0
-  for (let i = heatmapData.length - 1; i >= 0; i--) {
-    const week = heatmapData[i]
+  for (let i = heatmapData.value.length - 1; i >= 0; i--) {
+    const week = heatmapData.value[i]
     for (let j = week.length - 1; j >= 0; j--) {
       if (week[j].count > 0) streak++
       else return streak
@@ -311,7 +304,7 @@ const streakDays = computed(() => {
 
 const totalActiveDays = computed(() => {
   let total = 0
-  for (const week of heatmapData) {
+  for (const week of heatmapData.value) {
     for (const day of week) {
       if (day.count > 0) total++
     }
@@ -324,11 +317,36 @@ const avgPerWeek = computed(() => {
 })
 
 // ==================== 学习路径 ====================
-const paths = ref([
-  { name: 'Java 后端开发进阶', progress: 65, nodes: 12, updateTime: '2026-06-08' },
-  { name: 'Spring Boot 微服务实战', progress: 30, nodes: 8, updateTime: '2026-06-05' },
-  { name: '数据结构与算法精讲', progress: 80, nodes: 20, updateTime: '2026-06-07' }
-])
+const paths = ref([])
+
+// ==================== 数据加载 ====================
+onMounted(async () => {
+  try {
+    const statsRes = await getDashboardStats()
+    stats.value = {
+      pathCount: statsRes.pathCount || 0,
+      completedNodes: statsRes.completedNodes || 0,
+      activeDays: statsRes.activeDays || 0,
+      aiConsultCount: statsRes.aiConsultCount || 0,
+      dailyActivities: statsRes.dailyActivities || []
+    }
+    heatmapData.value = generateHeatmapData(stats.value.dailyActivities)
+  } catch (err) {
+    console.error('获取仪表盘数据失败', err)
+  }
+
+  try {
+    const pathsRes = await getLearningPaths()
+    paths.value = (pathsRes || []).map(p => ({
+      name: p.name,
+      progress: p.progress || 0,
+      nodes: p.nodes || p.nodeCount || 0,
+      updateTime: p.updateTime || p.updatedAt || ''
+    }))
+  } catch (err) {
+    console.error('获取学习路径失败', err)
+  }
+})
 </script>
 
 <style scoped lang="scss">

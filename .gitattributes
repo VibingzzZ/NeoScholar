@@ -1,41 +1,23 @@
-# 自动检测文本文件，统一使用 LF 换行符
-*       text=auto eol=lf
+# 所有文本文件统一用 LF 换行符
+* text=auto eol=lf
 
-# Java / Spring Boot
-*.java      text eol=lf
-*.xml       text eol=lf
-*.yml       text eol=lf
-*.yaml      text eol=lf
-*.properties text eol=lf
-*.gradle    text eol=lf
+# Windows 批处理文件需要 CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
 
-# 前端 / Web
-*.js        text eol=lf
-*.ts        text eol=lf
-*.vue       text eol=lf
-*.json      text eol=lf
-*.css       text eol=lf
-*.scss      text eol=lf
-*.html      text eol=lf
-
-# 脚本
-*.sh        text eol=lf
-*.bash      text eol=lf
-*.cmd       text eol=crlf
-*.bat       text eol=crlf
-
-# 文档
-*.md        text eol=lf
-*.txt       text eol=lf
-*.sql       text eol=lf
-
-# 二进制文件
-*.jar       binary
-*.png       binary
-*.jpg       binary
-*.jpeg      binary
-*.gif       binary
-*.ico       binary
-*.pdf       binary
-*.zip       binary
-*.tar.gz    binary
+# 二进制文件不转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.jar binary
+*.zip binary
+*.gz binary
+*.tar binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.pdf binary
+*.class binary

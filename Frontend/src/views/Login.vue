@@ -27,10 +27,10 @@
 
       <div class="login-form-area">
         <div class="form-card">
-          <h2>欢迎回来</h2>
-          <p class="form-subtitle">登录你的账号，继续学习之旅</p>
+          <h2>{{ isRegister ? '创建账号' : '欢迎回来' }}</h2>
+          <p class="form-subtitle">{{ isRegister ? '注册新账号，开启学习之旅' : '登录你的账号，继续学习之旅' }}</p>
 
-          <el-form ref="formRef" :model="form" :rules="rules" size="large" @submit.prevent="handleLogin">
+          <el-form ref="formRef" :model="form" :rules="rules" size="large" @submit.prevent="handleSubmit">
             <el-form-item prop="username">
               <el-input
                 v-model="form.username"
@@ -46,13 +46,23 @@
                 placeholder="请输入密码"
                 :prefix-icon="Lock"
                 show-password
-                @keyup.enter="handleLogin"
+                @keyup.enter="handleSubmit"
+              />
+            </el-form-item>
+
+            <el-form-item v-if="isRegister" prop="confirmPassword">
+              <el-input
+                v-model="form.confirmPassword"
+                type="password"
+                placeholder="请再次输入密码"
+                :prefix-icon="Lock"
+                show-password
               />
             </el-form-item>
 
             <el-form-item>
-              <el-button type="primary" :loading="loading" class="login-btn" @click="handleLogin">
-                登 录
+              <el-button type="primary" :loading="loading" class="login-btn" @click="handleSubmit">
+                {{ isRegister ? '注 册' : '登 录' }}
               </el-button>
             </el-form-item>
 
@@ -63,7 +73,7 @@
           </el-form>
 
           <div class="register-link">
-            还没有账号？<a href="#">立即注册</a>
+            {{ isRegister ? '已有账号？' : '还没有账号？' }}<a href="#" @click.prevent="isRegister = !isRegister">{{ isRegister ? '立即登录' : '立即注册' }}</a>
           </div>
         </div>
       </div>
@@ -76,31 +86,63 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Sunny, UserFilled, MapLocation, ChatDotRound, User, Lock } from '@element-plus/icons-vue'
+import { login as loginApi, register as registerApi } from '@/api/auth'
 import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
 const store = useUserStore()
 
-const form = reactive({ username: '', password: '' })
+const form = reactive({ username: '', password: '', confirmPassword: '' })
+const isRegister = ref(false)
 const rememberMe = ref(false)
 const loading = ref(false)
 
 const rules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, message: '密码长度不能少于 6 位', trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { required: true, message: '请再次输入密码', trigger: 'blur' },
+    {
+      validator: (_rule, value, callback) => {
+        if (value !== form.password) {
+          callback(new Error('两次输入的密码不一致'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ]
 }
 
-function handleLogin() {
+async function handleSubmit() {
   loading.value = true
-  setTimeout(() => {
-    loading.value = false
-    store.login(
-      { id: 1, username: form.username || '张同学', avatar: '' },
-      'demo-token'
-    )
-    ElMessage.success('登录成功，欢迎回来！')
+  try {
+    if (isRegister.value) {
+      const res = await registerApi({
+        username: form.username,
+        password: form.password,
+        confirmPassword: form.confirmPassword
+      })
+      store.login(res.user, res.token)
+      ElMessage.success('注册成功，欢迎加入！')
+    } else {
+      const res = await loginApi({
+        username: form.username,
+        password: form.password
+      })
+      store.login(res.user, res.token)
+      ElMessage.success('登录成功，欢迎回来！')
+    }
     router.push('/dashboard')
-  }, 800)
+  } catch (err) {
+    ElMessage.error(err?.response?.data?.message || err?.message || '操作失败')
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 

@@ -46,12 +46,13 @@ public class PathPlanningServiceImpl extends ServiceImpl<PathPlanningMapper, Lea
             return null;
         }
 
+        LearningPaths path = null;
         try {
             String major = profile.getMajorOrField();
-            String goal = profile.getLearningGoal()!=null?
-                    profile.getLearningGoal().getData():"";
-            String knowledge = profile.getKnowledgeBase()!=null?
-                    profile.getKnowledgeBase().getData():"";
+            String goal = profile.getLearningGoal() != null ?
+                    profile.getLearningGoal() : "";
+            String knowledge = profile.getKnowledgeBase() != null ?
+                    profile.getKnowledgeBase() : "";
 
             //调用大模型生成路径
 
@@ -69,7 +70,7 @@ public class PathPlanningServiceImpl extends ServiceImpl<PathPlanningMapper, Lea
                 return null;
             }
             String jsonStr = objectMapper.writeValueAsString(pathNodes);
-            LearningPaths path = new LearningPaths();
+            path = new LearningPaths();
             path.setUserId(profile.getUserId());
             path.setPathName(goal + "_专属学习路径");
             path.setNodesJson(jsonStr);
@@ -80,6 +81,7 @@ public class PathPlanningServiceImpl extends ServiceImpl<PathPlanningMapper, Lea
             pathPlanningMapper.insert(path);
 
             log.info("成功为用户{}生成包含{}个节点的专属学习路径", profile.getUserId(), pathNodes.size());
+            return path.getId();
         } catch (Exception e) {
             log.error("生成学习路径时发生错误", e);
         }
