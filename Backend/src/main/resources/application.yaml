@@ -68,5 +68,6 @@ mybatis-plus:
   type-aliases-package: com.javaee.backend.entity
 
 # JWT 配置
-#jwt:
-#  secret: "wenji-jwt-secret-key-at-least-32-characters-long-for-security-2024"
+jwt:
+  secret: "neoscholar-jwt-secret-key-at-least-32-characters-long-2024"
+  expiration-ms: 86400000

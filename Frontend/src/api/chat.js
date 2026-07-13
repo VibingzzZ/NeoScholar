@@ -1,12 +1,18 @@
 const BASE_URL = '/api'
 
-export function createChatStream(question, chatId, onToken, onDone, onError) {
+export function createChatStream(question, chatId, userId, onToken, onDone, onError) {
   const controller = new AbortController()
+  const token = localStorage.getItem('token')
+
+  const headers = { 'Content-Type': 'application/json' }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
 
   fetch(`${BASE_URL}/chat/stream`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ question, chatId }),
+    headers,
+    body: JSON.stringify({ question, chatId, userId }),
     signal: controller.signal
   })
     .then(async (response) => {

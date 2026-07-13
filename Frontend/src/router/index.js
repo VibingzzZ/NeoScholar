@@ -51,6 +51,16 @@ const router = createRouter({
 
 router.beforeEach((to, _from, next) => {
   document.title = to.meta.title || 'NeoScholar 智能学伴'
+
+  const token = localStorage.getItem('token')
+  if (!token && to.path !== '/login') {
+    next('/login')
+    return
+  }
+  if (token && to.path === '/login') {
+    next('/dashboard')
+    return
+  }
   next()
 })
 

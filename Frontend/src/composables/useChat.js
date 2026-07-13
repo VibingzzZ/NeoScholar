@@ -1,5 +1,6 @@
 import { ref, onUnmounted } from 'vue'
 import { createChatStream } from '@/api/chat'
+import { useUserStore } from '@/stores/user'
 
 export function useChat() {
   const messages = ref([])
@@ -22,16 +23,16 @@ export function useChat() {
     loading.value = true
     currentReply.value = ''
 
+    const userStore = useUserStore()
+    const userId = userStore.user?.id || 1
+
     controller = createChatStream(
       question,
       chatId,
-      (token) => {
-        currentReply.value += token
-      },
+      userId,
+      (token) => { currentReply.value += token },
       () => {
-        if (currentReply.value) {
-          addMessage('assistant', currentReply.value)
-        }
+        if (currentReply.value) addMessage('assistant', currentReply.value)
         currentReply.value = ''
         loading.value = false
       },
@@ -45,16 +46,12 @@ export function useChat() {
 
   function stopStreaming() {
     controller?.abort()
-    if (currentReply.value) {
-      addMessage('assistant', currentReply.value)
-    }
+    if (currentReply.value) addMessage('assistant', currentReply.value)
     currentReply.value = ''
     loading.value = false
   }
 
-  onUnmounted(() => {
-    controller?.abort()
-  })
+  onUnmounted(() => { controller?.abort() })
 
   return { messages, loading, currentReply, sendMessage, stopStreaming }
 }

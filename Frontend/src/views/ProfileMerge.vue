@@ -186,41 +186,28 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Connection, Document, MagicStick } from '@element-plus/icons-vue'
+import { listProfiles, mergeProfiles, getProfile } from '@/api/profile'
+import { useUserStore } from '@/stores/user'
 
 const originalId = ref(null)
 const targetId = ref(null)
 const merging = ref(false)
 const mergedResult = ref(null)
 
-const availableProfiles = ref([
-  {
-    id: 1, userId: 1, majorOrField: '软件工程',
-    learningGoal: '掌握 Spring Boot 微服务开发',
-    knowledgeBase: 'Java 基础、MySQL',
-    cognitiveStyle: '逻辑分析型',
-    commonMistakes: '并发编程不熟',
-    interactionPreference: '详细讲解'
-  },
-  {
-    id: 2, userId: 1, majorOrField: '计算机科学',
-    learningGoal: '深入学习数据结构与算法',
-    knowledgeBase: 'C语言基础',
-    cognitiveStyle: '实践操作型',
-    commonMistakes: '递归不熟练',
-    interactionPreference: '引导式提问'
-  },
-  {
-    id: 3, userId: 1, majorOrField: '数据科学',
-    learningGoal: '掌握机器学习基础',
-    knowledgeBase: 'Python、统计学',
-    cognitiveStyle: '直觉创新型',
-    commonMistakes: '过拟合问题',
-    interactionPreference: '案例驱动'
+const availableProfiles = ref([])
+
+async function loadProfiles() {
+  try {
+    const userId = useUserStore().user?.id || 1
+    const res = await listProfiles(userId)
+    availableProfiles.value = res || []
+  } catch {
+    ElMessage.error('加载画像列表失败')
   }
-])
+}
 
 const originalProfile = computed(() =>
   availableProfiles.value.find((p) => p.id === originalId.value)
@@ -245,37 +232,56 @@ const mergeHistory = ref([
   }
 ])
 
-function doMerge() {
+async function doMerge() {
   if (originalId.value === targetId.value) {
     ElMessage.warning('请选择两份不同的画像')
     return
   }
   merging.value = true
-  setTimeout(() => {
-    mergedResult.value = {
-      majorOrField: originalProfile.value.majorOrField + ' / ' + targetProfile.value.majorOrField,
-      learningGoal: '综合目标：' + originalProfile.value.learningGoal + '；同时' + targetProfile.value.learningGoal,
-      knowledgeBase: originalProfile.value.knowledgeBase + '、' + targetProfile.value.knowledgeBase,
-      cognitiveStyle: originalProfile.value.cognitiveStyle + ' 为主，辅以 ' + targetProfile.value.cognitiveStyle,
-      commonMistakes: originalProfile.value.commonMistakes + '；' + targetProfile.value.commonMistakes,
-      interactionPreference: originalProfile.value.interactionPreference + ' + ' + targetProfile.value.interactionPreference
-    }
-    merging.value = false
+  try {
+    await mergeProfiles(originalId.value, targetId.value)
+    await pollMergedResult()
     ElMessage.success('画像合并完成！')
-  }, 1500)
+  } catch {
+    ElMessage.error('合并失败')
+  } finally {
+    merging.value = false
+  }
 }
 
-function applyMerge() {
-  mergeHistory.value.unshift({
-    id: mergeHistory.value.length + 1,
-    originalId: originalId.value,
-    targetId: targetId.value,
-    resultSummary: mergedResult.value.learningGoal.slice(0, 30) + '...',
-    time: new Date().toLocaleString('zh-CN'),
-    status: 'success'
-  })
-  ElMessage.success('合并结果已应用')
+async function pollMergedResult(maxAttempts = 30, interval = 1000) {
+  const original = originalProfile.value
+  for (let i = 0; i < maxAttempts; i++) {
+    await new Promise(resolve => setTimeout(resolve, interval))
+    const res = await getProfile(targetId.value)
+    if (res && (!original || res.updateAt !== original.updateAt)) {
+      mergedResult.value = res
+      return
+    }
+  }
+  ElMessage.warning('合并结果获取超时')
 }
+
+async function applyMerge() {
+  try {
+    mergeHistory.value.unshift({
+      id: mergeHistory.value.length + 1,
+      originalId: originalId.value,
+      targetId: targetId.value,
+      resultSummary: mergedResult.value.learningGoal.slice(0, 30) + '...',
+      time: new Date().toLocaleString('zh-CN'),
+      status: 'success'
+    })
+    await loadProfiles()
+    ElMessage.success('合并结果已应用')
+  } catch {
+    ElMessage.error('应用失败')
+  }
+}
+
+onMounted(() => {
+  loadProfiles()
+})
 </script>
 
 <style scoped lang="scss">
