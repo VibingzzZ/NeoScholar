@@ -9,6 +9,7 @@ import com.javaee.backend.entity.LearningResource;
 import com.javaee.backend.mapper.LearningPathsMapper;
 import com.javaee.backend.mapper.LearningResourceMapper;
 import com.javaee.backend.po.dto.LearningPathNodeDTO;
+import com.javaee.backend.service.ActivityLogService;
 import com.javaee.backend.service.FileStorageService;
 import com.javaee.backend.service.ResourceOrchestratorService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,8 @@ public class ResourceOrchestratorServiceImpl implements ResourceOrchestratorServ
     private LearningPathsMapper learningPathsMapper;
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private ActivityLogService activityLogService;
 
     @Override
     public void generateResource(Long pathId) throws IOException {
@@ -62,6 +65,9 @@ public class ResourceOrchestratorServiceImpl implements ResourceOrchestratorServ
             resource.setResourceType(node.getResourceType());
             resource.setGeneratedByAgent(agentName);
             learningResourceMapper.insert(resource);
+
+            // 热力图计数：每生成一个 PPT/测验资源 +1
+            activityLogService.incrementActivity(path.getUserId());
         }
     }
     private List<LearningPathNodeDTO> parseNodes(String nodeJson) {

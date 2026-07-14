@@ -2,15 +2,27 @@ package com.javaee.backend.service;
 
 import com.javaee.backend.AIService.ProfileMergeAIService;
 import com.javaee.backend.entity.Profile;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+
 @SpringBootTest
+@Tag("ai")
 class ProfileMergeServiceAITest {
 
     @Autowired
     private ProfileMergeAIService profileMergeAIService;
+
+    @BeforeEach
+    void checkApiKey() {
+        String apiKey = System.getenv("QWEN_API_KEY");
+        assumeTrue(apiKey != null && apiKey.startsWith("sk-"),
+                "跳过：未设置有效的 QWEN_API_KEY 环境变量");
+    }
 
     @Test
     void testLLMMerge() {

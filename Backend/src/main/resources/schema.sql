@@ -42,6 +42,14 @@ CREATE TABLE IF NOT EXISTS learning_resources (
     created_at         DATETIME     COMMENT '创建时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS activity_log (
+    id            BIGINT  AUTO_INCREMENT PRIMARY KEY,
+    user_id       BIGINT  NOT NULL COMMENT '用户ID',
+    activity_date DATE    NOT NULL COMMENT '活动日期',
+    count         INT     DEFAULT 1 COMMENT '当日活动次数',
+    UNIQUE KEY uk_user_date (user_id, activity_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS chat_messages (
     id          BIGINT       AUTO_INCREMENT PRIMARY KEY,
     user_id     BIGINT       NOT NULL COMMENT '用户ID',

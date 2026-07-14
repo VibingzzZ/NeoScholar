@@ -1,4 +1,5 @@
 import { get, post } from './index'
+import http from './index'
 
 const BASE = '/learning-path'
 
@@ -16,4 +17,24 @@ export function generatePath(userId) {
 
 export function updateProgress(pathId, nodeIndex) {
   return post(`${BASE}/progress`, { pathId, nodeIndex })
+}
+
+/** 获取学习路径下的所有生成资源（PPT、测验等） */
+export function getPathResources(pathId) {
+  return get(`${BASE}/${pathId}/resources`)
+}
+
+/** 下载学习资源文件（返回 Blob） */
+export async function downloadResource(resourceId, fileName) {
+  const response = await http.get(`${BASE}/resource/${resourceId}/download`, {
+    responseType: 'blob'
+  })
+  const url = window.URL.createObjectURL(new Blob([response.data]))
+  const link = document.createElement('a')
+  link.href = url
+  link.download = fileName || 'resource.txt'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  window.URL.revokeObjectURL(url)
 }

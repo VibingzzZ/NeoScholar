@@ -1,0 +1,41 @@
+# ============================================================
+# Docker Build Context 忽略文件
+# 防止这些文件/目录被发送到 Docker daemon 作为构建上下文
+# ============================================================
+
+# --- Git ---
+.git/
+.gitignore
+.gitattributes
+
+# --- IDE & Editor ---
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+
+# --- Node / Frontend ---
+Frontend/node_modules/
+Frontend/dist/
+
+# --- Maven / Backend ---
+Backend/target/
+
+# --- Docker ---
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- 文档 & 杂项 ---
+docs/
+*.md
+!README.md
+*.png
+*.log
