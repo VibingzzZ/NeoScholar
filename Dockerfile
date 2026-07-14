@@ -27,6 +27,9 @@ RUN ./mvnw package -DskipTests -B \
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
+# 安装 curl（用于健康检查）和 mysql-client（用于启动前等待 MySQL ready）
+RUN apk add --no-cache curl mysql-client
+
 # 创建非 root 用户（安全加固）
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
@@ -36,6 +39,17 @@ COPY --from=backend-builder /app/backend/target/Backend-*.jar app.jar
 # 复制前端静态资源到 Spring Boot 静态资源目录
 COPY --from=frontend-builder /app/frontend/dist /app/static
 
+# 启动脚本：等待 MySQL 真正可用后再启动应用
+RUN echo '#!/bin/sh' > /app/entrypoint.sh && \
+    echo 'echo "Waiting for MySQL to be ready..."' >> /app/entrypoint.sh && \
+    echo 'until mysqladmin ping -h "${DB_HOST:-mysql}" -P "${DB_PORT:-3306}" -u "${DB_USER:-root}" -p"${DB_PASSWORD:-123456}" --ssl=0 --silent 2>/dev/null; do' >> /app/entrypoint.sh && \
+    echo '  echo "MySQL not ready yet, retrying in 3s..."' >> /app/entrypoint.sh && \
+    echo '  sleep 3' >> /app/entrypoint.sh && \
+    echo 'done' >> /app/entrypoint.sh && \
+    echo 'echo "MySQL is ready, starting application..."' >> /app/entrypoint.sh && \
+    echo 'exec java -jar /app/app.jar' >> /app/entrypoint.sh && \
+    chmod +x /app/entrypoint.sh
+
 # 切换为非 root 用户
 USER appuser
 
@@ -43,6 +57,6 @@ EXPOSE 8080
 
 # 添加健康检查
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
-    CMD wget -qO- http://localhost:8080/actuator/health || exit 1
+    CMD curl -sf http://localhost:8080/actuator/health || exit 1
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["/app/entrypoint.sh"]
