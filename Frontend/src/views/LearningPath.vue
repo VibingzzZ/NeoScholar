@@ -77,6 +77,25 @@
                     已完成
                   </el-tag>
                 </div>
+                <!-- 节点对应资源下载 -->
+                <div class="node-resources" v-if="getNodeResources(node.stepOrder).length > 0">
+                  <div class="resource-label">AI 生成资源</div>
+                  <div
+                    v-for="res in getNodeResources(node.stepOrder)"
+                    :key="res.id"
+                    class="resource-item"
+                  >
+                    <div class="resource-info">
+                      <el-tag :type="res.resourceType === 'quiz' ? 'warning' : 'primary'" size="small">
+                        {{ res.resourceType === 'quiz' ? '测验' : 'PPT大纲' }}
+                      </el-tag>
+                      <span class="resource-title">{{ res.title }}</span>
+                    </div>
+                    <el-button type="primary" link size="small" @click.stop="downloadFile(res)">
+                      <el-icon><Download /></el-icon> 下载
+                    </el-button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -97,10 +116,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Refresh, Check, MapLocation } from '@element-plus/icons-vue'
-import { getLearningPaths, updateProgress, generatePath } from '@/api/path'
+import { Refresh, Check, MapLocation, Download } from '@element-plus/icons-vue'
+import { getLearningPaths, updateProgress, generatePath, getPathResources, downloadResource } from '@/api/path'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
@@ -111,6 +130,7 @@ const selectedNodeIndex = ref(0)
 const loading = ref(false)
 
 const learningPaths = ref([])
+const pathResources = ref([])  // 当前路径的所有学习资源
 
 const currentPath = computed(() =>
   learningPaths.value.find((p) => String(p.id) === activeTab.value)
@@ -156,6 +176,36 @@ async function completeNode(index) {
   }
 }
 
+/** 获取指定节点序号对应的资源列表 */
+function getNodeResources(nodeIndex) {
+  return pathResources.value.filter(r => r.nodeIndex === nodeIndex)
+}
+
+/** 下载资源文件 */
+async function downloadFile(resource) {
+  try {
+    const fileName = `${resource.title}.txt`
+    await downloadResource(resource.id, fileName)
+    ElMessage.success('下载成功')
+  } catch (e) {
+    ElMessage.error('下载失败')
+  }
+}
+
+/** 加载当前路径的资源列表 */
+async function loadResources(pathId) {
+  try {
+    const res = await getPathResources(pathId)
+    if (res && res.code === 200 && res.data) {
+      pathResources.value = res.data
+    } else {
+      pathResources.value = []
+    }
+  } catch (e) {
+    pathResources.value = []
+  }
+}
+
 async function regeneratePath() {
   loading.value = true
   try {
@@ -187,8 +237,19 @@ async function loadPaths() {
   }
 }
 
+// 切换路径标签时自动加载资源
+watch(activeTab, (newPathId) => {
+  if (newPathId) {
+    loadResources(Number(newPathId))
+  }
+})
+
 onMounted(() => {
-  loadPaths()
+  loadPaths().then(() => {
+    if (activeTab.value) {
+      loadResources(Number(activeTab.value))
+    }
+  })
 })
 </script>
 
@@ -342,6 +403,39 @@ onMounted(() => {
       background: #fafafa;
       border: 1px solid #f3f4f6;
       .node-title { color: #9ca3af; }
+    }
+  }
+}
+
+.node-resources {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #e5e7eb;
+
+  .resource-label {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-bottom: 6px;
+  }
+
+  .resource-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: #f9fafb;
+    margin-top: 4px;
+
+    .resource-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .resource-title {
+        font-size: 12px;
+        color: #374151;
+      }
     }
   }
 }
