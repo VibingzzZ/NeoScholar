@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.javaee.backend.entity.LearningPaths;
 import com.javaee.backend.entity.StudentProfile;
 import com.javaee.backend.mapper.LearningPathsMapper;
+import com.javaee.backend.service.ActivityLogService;
 import com.javaee.backend.service.LearningPathService;
 import com.javaee.backend.service.PathPlanningService;
 import com.javaee.backend.service.StudentProfileService;
@@ -24,6 +25,9 @@ public class LearningPathServiceImpl extends ServiceImpl<LearningPathsMapper, Le
 
     @Autowired
     private PathPlanningService pathPlanningService;
+
+    @Autowired
+    private ActivityLogService activityLogService;
 
     @Override
     public List<LearningPaths> listByUserId(Long userId) {
@@ -44,6 +48,13 @@ public class LearningPathServiceImpl extends ServiceImpl<LearningPathsMapper, Le
         wrapper.eq(LearningPaths::getId, pathId)
                 .set(LearningPaths::getCurrentNodeIndex, nodeIndex);
         baseMapper.update(wrapper);
+
+        // 热力图计数：每完成一个学习节点 +1
+        LearningPaths path = baseMapper.selectById(pathId);
+        if (path != null) {
+            activityLogService.incrementActivity(path.getUserId());
+        }
+
         log.info("更新学习路径进度成功, pathId: {}, nodeIndex: {}", pathId, nodeIndex);
     }
 
