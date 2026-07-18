@@ -22,7 +22,7 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         message.setRole(role);
         message.setContent(content);
         message.setMetadata(chatId);
-        message.setCreated_at(new Timestamp(System.currentTimeMillis()));
+        message.setCreatedAt(new Timestamp(System.currentTimeMillis()));
         chatMessageMapper.insert(message);
     }
 }

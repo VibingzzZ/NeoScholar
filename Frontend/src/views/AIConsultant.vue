@@ -55,7 +55,7 @@
           </div>
           <div class="message-body">
             <div class="message-sender">AI 导师 <span class="typing-dot">●</span></div>
-            <div class="message-content">{{ currentReply }}</div>
+            <div class="message-content" v-html="formatContent(currentReply)"></div>
           </div>
         </div>
       </div>
@@ -101,6 +101,149 @@ import { ref, nextTick, watch } from 'vue'
 import { ChatDotRound, Sunny, UserFilled, Promotion } from '@element-plus/icons-vue'
 import { useChat } from '@/composables/useChat'
 
+// ========== 内联 Markdown → HTML 转换器 ==========
+function parseMarkdown(text) {
+  if (!text) return ''
+
+  // 预处理：修复 AI 常见格式问题（#/&gt;/- 后缺空格）
+  let md = text
+    .replace(/^(#{1,6})([^\s#])/gm, '$1 $2')
+    .replace(/^>([^\s>])/gm, '> $1')
+    .replace(/^(-)([^\s-])/gm, '$1 $2')
+
+  // 预处理：拆分表格行（无换行时 || 是行边界，如 |a|b||--|--||1|2|）
+  // 必须在其他换行插入之前处理，避免表格被误拆
+  md = md.replace(/\|\|/g, '|\n|')
+
+  // 预处理：在块级 Markdown 标记前自动插入换行
+  // AI 的 SSE 流式传输可能丢失 \n，导致 ---、###、> 等标记挤在段落中
+  md = md
+    // 水平线：[非\n|-]---[非\n|-] → 前面插入 \n\n
+    // 排除 |--- 和 ---|（表格分隔行），排除 - 开头的 ---（减号）
+    .replace(/([^\n|-])---([^\n|-])/g, '$1\n\n---\n$2')
+    .replace(/([^\n|-])---$/gm, '$1\n\n---')
+    .replace(/^---([^\n|-])/gm, '---\n$1')
+    // 标题：[非\n|#]### → 前面插入 \n\n（排除 |### 表格内）
+    .replace(/([^\n|#])(#{1,6}\s)/g, '$1\n\n$2')
+    // 引用：[非\n|>]>  → 前面插入 \n\n（排除 |> 表格内、>> 嵌套）
+    .replace(/([^\n|>])(>\s)/g, '$1\n\n$2')
+
+  const blocks = []   // 收集顶层块级 HTML
+  const placeholders = new Map()  // 占位符 → HTML
+  let uid = 0
+  const stash = (html) => { const key = `%%BLOCK_${uid++}%%`; placeholders.set(key, html); return key }
+
+  // ── 1. 提取代码块（```...```）──
+  md = md.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+    const escaped = code
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    return stash(`<pre><code>${escaped}</code></pre>`)
+  })
+
+  // ── 2. 提取表格（连续的 | 行）──
+  md = md.replace(/(^\|.+\|\n(?:^\|[-:\s|]+\|\n)?(?:^\|.+\|\n?)+)/gm, (table) => {
+    const rows = table.trim().split('\n').filter(line => line.includes('|'))
+    if (rows.length < 2) return table
+    // 过滤分隔行
+    const dataRows = rows.filter(r => !/^\|[-:\s|]+\|$/.test(r))
+    if (dataRows.length === 0) return table
+    const isHeader = rows.length > dataRows.length  // 有分隔行
+    const htmlRows = dataRows.map((row, i) => {
+      const cells = row.split('|').filter(c => c.trim() !== '').map(c => c.trim())
+      const tag = (isHeader && i === 0) ? 'th' : 'td'
+      return `<tr>${cells.map(c => `<${tag}>${c}</${tag}>`).join('')}</tr>`
+    })
+    return stash(`<table>${htmlRows.join('')}</table>`)
+  })
+
+  // ── 3. 逐行处理块级元素 ──
+  const lines = md.split('\n')
+  const result = []
+  let inList = false
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i]
+
+    // 空行：结束列表
+    if (line.trim() === '') {
+      if (inList) { result.push('</ul>'); inList = false }
+      result.push('')
+      continue
+    }
+
+    // 标题 h1-h6
+    let m = line.match(/^(#{1,6})\s+(.+)$/)
+    if (m) {
+      if (inList) { result.push('</ul>'); inList = false }
+      const level = m[1].length
+      result.push(`<h${level}>${inline(m[2])}</h${level}>`)
+      continue
+    }
+
+    // 水平线
+    if (/^(-{3,}|\*{3,})$/.test(line.trim())) {
+      if (inList) { result.push('</ul>'); inList = false }
+      result.push('<hr>')
+      continue
+    }
+
+    // 引用块
+    m = line.match(/^>\s?(.+)$/)
+    if (m) {
+      if (inList) { result.push('</ul>'); inList = false }
+      result.push(`<blockquote><p>${inline(m[1])}</p></blockquote>`)
+      continue
+    }
+
+    // 无序列表
+    m = line.match(/^-\s+(.+)$/)
+    if (m) {
+      if (!inList) { result.push('<ul>'); inList = true }
+      result.push(`<li>${inline(m[1])}</li>`)
+      continue
+    }
+
+    // 普通段落（跳过占位符行，它们自带 HTML 标签）
+    if (inList) { result.push('</ul>'); inList = false }
+    if (line.trim()) {
+      if (/^%%BLOCK_\d+%%$/.test(line.trim())) {
+        result.push(line.trim())  // 占位符直接输出，不用 <p> 包裹
+      } else {
+        result.push(`<p>${inline(line)}</p>`)
+      }
+    }
+  }
+  if (inList) result.push('</ul>')
+
+  // ── 4. 还原占位符 ──
+  let html = result.join('\n')
+  for (const [key, val] of placeholders) {
+    html = html.replace(key, val)
+  }
+
+  return html
+}
+
+// 行内元素转换
+function inline(text) {
+  if (!text) return ''
+  return text
+    // 图片
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">')
+    // 链接
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+    // 粗体+斜体
+    .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+    // 粗体
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    // 斜体
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // 行内代码（保护已转义的）
+    .replace(/(?<!&|<)\`([^\`]+)\`(?!;)/g, '<code>$1</code>')
+    // 删除线
+    .replace(/~~(.+?)~~/g, '<del>$1</del>')
+}
+
 const { messages, loading, currentReply, sendMessage, stopStreaming } = useChat()
 
 const chatBody = ref(null)
@@ -128,9 +271,7 @@ function sendQuick(q) {
 }
 
 function formatContent(text) {
-  return text
-    .replace(/\n/g, '<br>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
+  return parseMarkdown(text)
 }
 
 watch(
@@ -262,12 +403,95 @@ watch(currentReply, async () => {
         border-radius: 4px 14px 14px 14px;
         word-break: break-word;
 
+        // Markdown 渲染样式
+        :deep(h1) { font-size: 1.4em; font-weight: 700; margin: 0.6em 0 0.4em; line-height: 1.3; }
+        :deep(h2) { font-size: 1.25em; font-weight: 700; margin: 0.6em 0 0.3em; line-height: 1.3; }
+        :deep(h3) { font-size: 1.1em; font-weight: 600; margin: 0.5em 0 0.25em; line-height: 1.3; }
+        :deep(h4) { font-size: 1em; font-weight: 600; margin: 0.4em 0 0.2em; }
+
+        :deep(p) { margin: 0.4em 0; }
+        :deep(strong) { font-weight: 700; color: #1f2937; }
+        :deep(em) { font-style: italic; }
+
+        :deep(ul), :deep(ol) {
+          padding-left: 1.5em;
+          margin: 0.3em 0;
+        }
+        :deep(li) { margin: 0.15em 0; }
+
+        :deep(blockquote) {
+          margin: 0.5em 0;
+          padding: 6px 14px;
+          border-left: 3px solid #4f6ef7;
+          background: rgba(79, 110, 247, 0.06);
+          border-radius: 0 6px 6px 0;
+          color: #6b7280;
+        }
+
         :deep(code) {
           background: rgba(79, 110, 247, 0.1);
           color: #4f6ef7;
           padding: 2px 6px;
           border-radius: 4px;
           font-size: 13px;
+          font-family: 'Consolas', 'Courier New', monospace;
+        }
+
+        :deep(pre) {
+          margin: 0.5em 0;
+          padding: 12px 14px;
+          background: #1f2937;
+          border-radius: 8px;
+          overflow-x: auto;
+
+          code {
+            background: none;
+            color: #e5e7eb;
+            padding: 0;
+            font-size: 13px;
+            line-height: 1.5;
+            border-radius: 0;
+          }
+        }
+
+        :deep(table) {
+          width: 100%;
+          margin: 0.5em 0;
+          border-collapse: collapse;
+          font-size: 13px;
+
+          th, td {
+            border: 1px solid #d1d5db;
+            padding: 6px 12px;
+            text-align: left;
+          }
+
+          th {
+            background: #f3f4f6;
+            font-weight: 600;
+            color: #374151;
+          }
+
+          tr:nth-child(even) td {
+            background: #fafbfc;
+          }
+        }
+
+        :deep(hr) {
+          margin: 0.8em 0;
+          border: none;
+          border-top: 1px solid #e5e7eb;
+        }
+
+        :deep(a) {
+          color: #4f6ef7;
+          text-decoration: underline;
+          &:hover { color: #3b5de7; }
+        }
+
+        :deep(img) {
+          max-width: 100%;
+          border-radius: 6px;
         }
       }
     }

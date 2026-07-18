@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 
 @RestController
@@ -32,6 +33,7 @@ public class ChatController {
                         chatId
                 )
                 .doOnNext(fullReply::append)
+                .concatWith(Mono.just("[DONE]"))
                 .doOnComplete(() -> {
                     String assistantReply = fullReply.toString();
                     chatMessageService.save(assistantReply, chatId, chatRequest.getUserId(), "assistant");

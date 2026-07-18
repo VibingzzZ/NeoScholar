@@ -51,13 +51,13 @@
           </el-breadcrumb>
         </div>
         <div class="header-right">
-          <el-badge :value="3" :max="99" class="notice-badge">
+          <el-badge :value="0" :max="99" class="notice-badge" :hidden="true">
             <el-icon :size="20"><Bell /></el-icon>
           </el-badge>
           <el-dropdown trigger="click">
             <span class="user-info">
               <el-avatar :size="32" icon="UserFilled" />
-              <span class="username">张同学</span>
+              <span class="username">{{ store.user?.username || '未登录' }}</span>
               <el-icon><ArrowDown /></el-icon>
             </span>
             <template #dropdown>

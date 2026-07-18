@@ -23,7 +23,7 @@ public class StudentProfileController {
     /**
      * 查询画像详情
      */
-    @PostMapping("/detail/{id}")
+    @GetMapping("/detail/{id}")
     public Result<StudentProfile> getProfile(@PathVariable Long id) {
         StudentProfile profile = studentProfileService.getById(id);
         if (profile == null) {
@@ -54,7 +54,7 @@ public class StudentProfileController {
     /**
      * 更新画像
      */
-    @PostMapping("/update")
+    @PutMapping("/update")
     public Result<StudentProfile> updateProfile(@RequestBody StudentProfile profile) {
         log.info("更新学生画像, id: {}", profile.getId());
         studentProfileService.update(profile);

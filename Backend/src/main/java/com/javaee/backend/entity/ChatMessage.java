@@ -17,6 +17,6 @@ public class ChatMessage {
     private String role;
     private String content;
     private String metadata;
-    private Timestamp created_at;
+    private Timestamp createdAt;
 
 }

@@ -212,6 +212,9 @@ const targetProfile = computed(() =>
 
 const mergeHistory = ref([])
 
+// 保存合并前原始画像的 updateAt，用于可靠轮询
+let originalUpdateAtBeforeMerge = null
+
 // 加载可用画像列表
 async function loadProfiles() {
   try {
@@ -239,6 +242,10 @@ async function doMerge() {
   }
   merging.value = true
   mergedResult.value = null
+
+  // 保存合并前的 updateAt 用于轮询检测
+  originalUpdateAtBeforeMerge = originalProfile.value?.updateAt || null
+
   try {
     const res = await mergeProfiles(originalId.value, targetId.value)
     if (res && res.code === 200) {
@@ -267,6 +274,7 @@ async function doMerge() {
     ElMessage.error('合并请求失败，请检查网络')
   } finally {
     merging.value = false
+    originalUpdateAtBeforeMerge = null
   }
 }
 
@@ -277,9 +285,8 @@ async function pollMergedResult(profileId, maxSeconds) {
     try {
       const res = await getProfile(profileId)
       if (res && res.code === 200 && res.data) {
-        // 检查画像是否已被更新（updateAt 变化）
-        const original = availableProfiles.value.find(p => p.id === profileId)
-        if (original && res.data.updateAt !== original.updateAt) {
+        // 检查画像是否已被更新（对比合并前保存的 updateAt）
+        if (res.data.updateAt && res.data.updateAt !== originalUpdateAtBeforeMerge) {
           return res.data
         }
       }

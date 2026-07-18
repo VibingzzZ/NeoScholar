@@ -73,11 +73,11 @@ public class DashboardServiceImpl implements DashboardService {
             LambdaQueryWrapper<ChatMessage> allMsgWrapper = new LambdaQueryWrapper<>();
             allMsgWrapper.eq(ChatMessage::getUserId, userId)
                     .eq(ChatMessage::getRole, "user")
-                    .select(ChatMessage::getCreated_at);
+                    .select(ChatMessage::getCreatedAt);
             List<ChatMessage> allUserMessages = chatMessageMapper.selectList(allMsgWrapper);
             for (ChatMessage m : allUserMessages) {
-                if (m.getCreated_at() != null) {
-                    String key = m.getCreated_at().toLocalDateTime().toLocalDate().format(fmt);
+                if (m.getCreatedAt() != null) {
+                    String key = m.getCreatedAt().toLocalDateTime().toLocalDate().format(fmt);
                     dateCountMap.merge(key, 1, Integer::sum);
                 }
             }
