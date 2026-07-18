@@ -40,6 +40,10 @@ export function get(url, params) {
   return http.get(url, { params }).then((res) => res.data)
 }
 
+export function put(url, data) {
+  return http.put(url, data).then((res) => res.data)
+}
+
 export function post(url, data) {
   return http.post(url, data).then((res) => res.data)
 }

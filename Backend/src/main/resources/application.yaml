@@ -16,29 +16,33 @@ spring:
       # 数据库索引
       database: 3
   datasource:
-    url: jdbc:mysql://localhost:3306/neo_scholar?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/neo_scholar?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
     username: root
     password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
 
 langchain4j:
   open-ai:
     chat-model:
-      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
-      api-key: ${QWEN_API_KEY:}
-      model-name: qwen-plus
+      base-url: https://api.deepseek.com
+      api-key: ${DEEPSEEK_API_KEY}
+      model-name: deepseek-chat
       temperature: 0.7
       max-tokens: 2000
       log-requests: true
       log-responses: true
     streaming-chat-model:
-      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
-      api-key: ${QWEN_API_KEY:}
-      model-name: qwen-plus
+      base-url: https://api.deepseek.com
+      api-key: ${DEEPSEEK_API_KEY}
+      model-name: deepseek-chat
       temperature: 0.7
       max-tokens: 2000
 #    embedding-model:
-#      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+#      base-url: https://token.peropero.net
 #      api-key: ${QWEN_API_KEY}
 #      model-name: text-embedding-v3
 #      dimension: 1024
