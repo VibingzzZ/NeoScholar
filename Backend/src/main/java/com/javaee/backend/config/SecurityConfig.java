@@ -1,6 +1,7 @@
 package com.javaee.backend.config;
 
 import com.javaee.backend.security.JwtAuthenticationFilter;
+import jakarta.servlet.DispatcherType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,9 +30,12 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // 允许 ASYNC dispatch，SSE 流式响应需要
+            .securityContext(securityContext -> securityContext.requireExplicitSave(false))
             .authorizeHttpRequests(auth -> auth
+                .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/**").authenticated()
+                .requestMatchers("/api/**").hasRole("USER")
                 .requestMatchers("/actuator/health").permitAll()
                 .anyRequest().permitAll()
             )

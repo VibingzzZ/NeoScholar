@@ -1,0 +1,90 @@
+好的，以下是根据您提供的知识点和学习内容生成的练习题，包含选择题和简答题，使用 Markdown 格式呈现。
+
+---
+
+## Agent开发框架实战练习题
+
+### 一、选择题（每题4个选项，请选出正确答案）
+
+**1. 在LangChain框架中，以下哪个组件主要用于实现Agent的“思考-行动-观察”循环？**  
+A. PromptTemplate  
+B. AgentExecutor  
+C. LLMChain  
+D. VectorStore  
+
+**正确答案：B**  
+**解析：** AgentExecutor 是LangChain中负责管理Agent循环的核心组件，它根据Agent的推理结果调用工具，并将观察结果反馈给Agent，形成ReAct模式。
+
+---
+
+**2. 关于LangChain中的Toolkit，以下描述正确的是？**  
+A. Toolkit是用于定义LLM的配置参数的工具  
+B. Toolkit是一组预定义的、可复用的工具集合，通常用于特定场景（如数据库查询、搜索引擎）  
+C. Toolkit只能用于AutoGPT，不能用于BabyAGI  
+D. Toolkit是LangChain中用于训练模型的工具  
+
+**正确答案：B**  
+**解析：** Toolkit（工具包）是LangChain中封装好的一组工具，例如SQLDatabaseToolkit、GoogleSearchToolkit等，方便Agent快速集成多种能力。
+
+---
+
+**3. 在ReAct模式中，Agent的典型输出顺序是？**  
+A. Thought → Action → Observation → Final Answer  
+B. Action → Thought → Observation → Final Answer  
+C. Observation → Thought → Action → Final Answer  
+D. Thought → Observation → Action → Final Answer  
+
+**正确答案：A**  
+**解析：** ReAct模式的核心是“思考（Thought）→ 行动（Action）→ 观察（Observation）→ 最终答案（Final Answer）”的循环。Agent先思考下一步行动，然后执行工具调用，获得观察结果，再继续思考或给出答案。
+
+---
+
+### 二、简答题
+
+**1. 请简述LangChain中Agent、Tool和Toolkit之间的关系，并举例说明如何构建一个简单的Agent链（例如：结合搜索引擎工具实现问答）。**  
+
+**参考答案：**  
+- **Agent**：负责决策，决定调用哪个工具以及如何解析结果。  
+- **Tool**：具体的功能单元，如“搜索网页”、“计算数学表达式”。  
+- **Toolkit**：一组相关工具的集合，例如“搜索工具包”包含搜索、网页抓取等工具。  
+
+**构建示例：**  
+1. 导入LangChain相关模块（如 `AgentType`, `Tool`, `initialize_agent`）。  
+2. 创建一个搜索引擎工具（例如使用 `SerpAPIWrapper` 或 `GoogleSearchAPIWrapper`）。  
+3. 定义Agent（如 `zero-shot-react-description` 类型），将工具列表传入。  
+4. 初始化AgentExecutor，传入LLM和工具列表。  
+5. 调用AgentExecutor的 `run()` 方法，输入问题，Agent会自动进行思考-行动-观察循环，最终返回答案。
+
+---
+
+**2. 阅读AutoGPT或BabyAGI的开源代码后，请分析其与LangChain Agent的主要区别，并说明AutoGPT在任务分解和长期记忆方面是如何实现的。**  
+
+**参考答案：**  
+- **主要区别：**  
+  - LangChain Agent 通常为单次任务或简单循环设计，依赖用户定义的工具和Prompt。  
+  - AutoGPT 更强调自主性：自动分解复杂任务、维护上下文、使用文件系统或向量数据库作为长期记忆。  
+- **任务分解：** AutoGPT 使用LLM生成子任务列表，并循环执行每个子任务，通过“思考-行动-结果”日志不断调整。  
+- **长期记忆：** 通过向量数据库（如Pinecone、Chroma）存储历史对话、任务状态和重要信息，支持检索增强，避免遗忘。
+
+---
+
+**3. 假设你要开发一个智能客服Agent，能够查询数据库中的用户订单信息，并调用天气API回答“我的订单什么时候到？今天会下雨吗？”这类问题。请设计一个简单的Agent链，并说明你使用了哪些Tool和ReAct循环步骤。**  
+
+**参考答案：**  
+- **使用的Tool：**  
+  - `SQLDatabaseTool`：用于查询订单表（如 `SELECT delivery_date FROM orders WHERE user_id=?`）。  
+  - `WeatherAPI` Tool：用于获取当前城市天气（如调用OpenWeatherMap）。  
+- **ReAct循环步骤：**  
+  1. **Thought：** 用户问订单时间和天气，需要分别查询订单数据库和天气API。  
+  2. **Action：** 调用 `SQLDatabaseTool`，参数为“用户ID：123，查询订单配送时间”。  
+  3. **Observation：** 返回“订单预计明天到达”。  
+  4. **Thought：** 还需要回答天气问题，调用天气API。  
+  5. **Action：** 调用 `WeatherAPI`，参数为“城市：北京”。  
+  6. **Observation：** 返回“今天有雨”。  
+  7. **Final Answer：** 整合信息：“您的订单预计明天到达，今天北京会下雨，建议带伞。”  
+
+**注意：** 如果Agent支持多工具并行调用，可以同时执行查询以提高效率；否则按顺序执行。
+
+--- 
+
+希望这些题目能帮助您巩固对Agent开发框架（尤其是LangChain、ReAct模式及开源项目）的理解。如需更多题目或深入解析，请随时告知。

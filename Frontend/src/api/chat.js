@@ -1,4 +1,10 @@
+import { get } from './index'
+
 const BASE_URL = '/api'
+
+export function getChatHistory(userId) {
+  return get(`/chat/history/${userId}`)
+}
 
 export function createChatStream(question, chatId, userId, onToken, onDone, onError) {
   const controller = new AbortController()
@@ -32,7 +38,9 @@ export function createChatStream(question, chatId, userId, onToken, onDone, onEr
         buffer = lines.pop() || ''
         for (const line of lines) {
           if (line.startsWith('data:')) {
-            const token = line.slice(5).trim()
+            // 只去掉 data: 前缀和末尾 \r，保留 \n 等有意义的空白字符
+            let token = line.slice(5)
+            if (token.endsWith('\r')) token = token.slice(0, -1)
             if (token === '[DONE]') {
               onDone()
               return

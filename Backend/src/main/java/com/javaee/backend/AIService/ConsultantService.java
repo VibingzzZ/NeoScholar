@@ -9,7 +9,7 @@ import reactor.core.publisher.Flux;
 /**
  * 提供用户对话服务
  */
-@AiService(tools = "GenerateTools")
+@AiService
 public interface ConsultantService {
     /**
      * 流式输出

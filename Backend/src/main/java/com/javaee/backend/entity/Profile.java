@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Profile {
-    private String major;
+    private String majorOrField;
     private String learningGoal;
     private String knowledgeBase;
     private String cognitiveStyle;

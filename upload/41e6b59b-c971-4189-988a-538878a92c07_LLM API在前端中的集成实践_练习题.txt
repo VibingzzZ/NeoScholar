@@ -1,0 +1,76 @@
+以下是根据“LLM API在前端中的集成实践”知识点设计的练习题，涵盖选择题与简答题，适用于检验学习者对前端调用LLM API及交互式AI组件设计的理解。
+
+---
+
+### 练习题：LLM API在前端中的集成实践
+
+#### **选择题**
+
+1. 在前端项目中调用LLM API（如OpenAI）时，以下哪种方式最常用于处理流式响应（Streaming Response）？
+   - A. 使用 `fetch` 的 `.text()` 方法一次性获取全部响应数据  
+   - B. 使用 `EventSource` 或 `ReadableStream` 逐步处理数据块  
+   - C. 使用 `XMLHttpRequest` 的同步模式  
+   - D. 使用 `WebSocket` 建立双向连接  
+
+   **正确答案：B**  
+   *解析：流式响应通常通过 `ReadableStream`（配合 `fetch` 的 `response.body.getReader()`）或 `EventSource` 实现，以逐步接收并展示数据，提升用户体验。*
+
+2. 在集成LLM API实现智能问答功能时，前端需要将用户输入发送到后端或直接调用API。以下哪种做法最安全且符合最佳实践？
+   - A. 将API密钥直接存储在前端代码中，并通过客户端JavaScript调用API  
+   - B. 通过前端代理服务器转发请求，并在服务器端管理API密钥  
+   - C. 使用 `localStorage` 存储API密钥，并在每次请求时读取  
+   - D. 将API密钥作为URL参数传递给后端服务  
+
+   **正确答案：B**  
+   *解析：直接在前端暴露API密钥存在安全风险。通过服务器端代理转发请求，可以保护密钥不被泄露，并实现请求验证、限流等安全措施。*
+
+3. 以下哪个前端库或技术最适合用于构建交互式AI组件（如聊天框、代码生成器），并支持实时流式渲染？
+   - A. jQuery  
+   - B. React 或 Vue 框架结合状态管理（如Redux或Pinia）  
+   - C. 原生JavaScript的 `alert()` 函数  
+   - D. 静态HTML表格  
+
+   **正确答案：B**  
+   *解析：React或Vue等现代框架支持组件化开发、响应式状态管理和虚拟DOM，便于实现实时流式渲染和交互式UI，如逐字显示AI回复。*
+
+#### **简答题**
+
+4. **简述**：在设计一个基于LLM API的智能问答前端组件时，请列举至少三个需要考虑的关键因素，并简要说明原因。
+
+   **参考答案**：  
+   - **安全性**：避免在前端暴露API密钥，应通过后端代理转发请求，防止密钥泄露和滥用。  
+   - **用户体验**：实现流式响应展示（如逐字输出），避免用户等待完整响应；提供加载状态提示和错误处理。  
+   - **性能优化**：限制请求频率（如防抖或节流），避免频繁调用API导致超时或费用增加；使用缓存机制减少重复请求。  
+   - **可扩展性**：组件设计应模块化，支持自定义参数（如模型选择、温度设置），便于未来集成不同LLM服务。
+
+5. **简答题**：假设你需要在React项目中集成OpenAI API，实现一个代码生成功能（用户输入需求，AI返回代码）。请描述从用户输入到最终渲染代码的完整流程，并说明如何实现流式响应。
+
+   **参考答案**：  
+   - **流程**：  
+     1. 用户通过输入框提交需求（如“生成一个React按钮组件”）。  
+     2. 前端将请求发送到后端代理服务器（避免暴露API密钥）。  
+     3. 后端调用OpenAI API的流式端点（如 `POST /v1/chat/completions` 设置 `stream: true`），并返回流式数据。  
+     4. 前端使用 `fetch` 的 `response.body.getReader()` 逐步读取数据块，解析为文本。  
+     5. 每接收到一块数据，更新React组件状态（如使用 `useState`），通过虚拟DOM逐字渲染代码到页面。  
+     6. 完成后，展示完整代码，并提供复制、高亮等功能。  
+   - **流式响应实现**：  
+     - 使用 `ReadableStream` 读取数据：  
+       ```javascript
+       const response = await fetch('/api/generate-code', { method: 'POST', body: JSON.stringify({ prompt }) });
+       const reader = response.body.getReader();
+       const decoder = new TextDecoder();
+       while (true) {
+         const { done, value } = await reader.read();
+         if (done) break;
+         const text = decoder.decode(value, { stream: true });
+         setCode(prev => prev + text); // 逐步更新状态
+       }
+       ```
+     - 注意处理流式数据的格式（如 `data: {...}\n\n`），并解析JSON。
+
+---
+
+**说明**：  
+- 选择题覆盖了核心实践（流式处理、安全、框架选择）。  
+- 简答题考察设计思维和实现细节，强调安全、用户体验和技术实现。  
+- 答案已标注，便于自测或教学使用。

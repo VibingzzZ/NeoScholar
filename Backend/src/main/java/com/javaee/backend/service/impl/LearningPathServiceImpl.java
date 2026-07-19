@@ -60,9 +60,9 @@ public class LearningPathServiceImpl extends ServiceImpl<LearningPathsMapper, Le
 
     @Override
     public Long generatePath(Long userId) {
-        StudentProfile profile = studentProfileService.getLatestByUserId(userId);
+        StudentProfile profile = studentProfileService.getActiveByUserId(userId);
         if (profile == null) {
-            log.warn("未找到用户{}的学生画像，无法生成学习路径", userId);
+            log.warn("未找到用户{}的活跃画像，无法生成学习路径", userId);
             return null;
         }
         try {

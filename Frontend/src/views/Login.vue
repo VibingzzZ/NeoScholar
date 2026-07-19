@@ -70,7 +70,7 @@
 
             <div class="form-extra" v-if="!isRegister">
               <el-checkbox v-model="rememberMe">记住密码</el-checkbox>
-              <a href="#">忘记密码？</a>
+              <a href="#" @click.prevent="handleForgotPassword">忘记密码？</a>
             </div>
           </el-form>
 
@@ -122,6 +122,10 @@ const rules = {
       trigger: 'blur'
     }
   ]
+}
+
+function handleForgotPassword() {
+  ElMessage.info('请联系管理员重置密码')
 }
 
 async function handleSubmit() {

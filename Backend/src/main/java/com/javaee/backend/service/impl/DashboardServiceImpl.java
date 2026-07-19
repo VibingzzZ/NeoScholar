@@ -30,6 +30,9 @@ public class DashboardServiceImpl implements DashboardService {
     @Autowired
     private ActivityLogMapper activityLogMapper;
 
+    @Autowired
+    private com.javaee.backend.service.StudentProfileService studentProfileService;
+
     @Override
     public DashboardStatsDTO getStats(Long userId) {
         DashboardStatsDTO stats = new DashboardStatsDTO();
@@ -73,11 +76,11 @@ public class DashboardServiceImpl implements DashboardService {
             LambdaQueryWrapper<ChatMessage> allMsgWrapper = new LambdaQueryWrapper<>();
             allMsgWrapper.eq(ChatMessage::getUserId, userId)
                     .eq(ChatMessage::getRole, "user")
-                    .select(ChatMessage::getCreated_at);
+                    .select(ChatMessage::getCreatedAt);
             List<ChatMessage> allUserMessages = chatMessageMapper.selectList(allMsgWrapper);
             for (ChatMessage m : allUserMessages) {
-                if (m.getCreated_at() != null) {
-                    String key = m.getCreated_at().toLocalDateTime().toLocalDate().format(fmt);
+                if (m.getCreatedAt() != null) {
+                    String key = m.getCreatedAt().toLocalDateTime().toLocalDate().format(fmt);
                     dateCountMap.merge(key, 1, Integer::sum);
                 }
             }
@@ -93,6 +96,23 @@ public class DashboardServiceImpl implements DashboardService {
         log.info("Dashboard统计: userId={}, 路径数={}, 已完成节点={}, 活跃天数={}, AI辅导次数={}",
                 userId, stats.getPathCount(), stats.getCompletedNodes(),
                 stats.getActiveDays(), stats.getAiConsultCount());
+
+        // 活跃画像摘要（容错：DB 迁移未完成时静默跳过）
+        try {
+            com.javaee.backend.entity.StudentProfile activeProfile =
+                    studentProfileService.getActiveByUserId(userId);
+            if (activeProfile != null) {
+                DashboardStatsDTO.ProfileSummary summary = new DashboardStatsDTO.ProfileSummary();
+                summary.setProfileId(activeProfile.getId());
+                summary.setMajorOrField(activeProfile.getMajorOrField());
+                summary.setLearningGoal(activeProfile.getLearningGoal());
+                summary.setSummary(activeProfile.getSummary());
+                summary.setSource(activeProfile.getSource());
+                stats.setActiveProfile(summary);
+            }
+        } catch (Exception e) {
+            log.warn("获取活跃画像失败 (DB 迁移可能未完成): {}", e.getMessage());
+        }
 
         return stats;
     }

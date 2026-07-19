@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { getActiveProfile } from '@/api/profile'
 
 export const useUserStore = defineStore('user', () => {
   // 从 localStorage 恢复登录态
@@ -11,8 +12,10 @@ export const useUserStore = defineStore('user', () => {
   const user = ref(savedUser)
   const token = ref(savedToken || '')
   const sidebarCollapsed = ref(false)
+  const activeProfile = ref(null)
 
   const isLoggedIn = computed(() => !!token.value)
+  const userId = computed(() => user.value?.id || 1)
 
   function login(userInfo, accessToken) {
     user.value = userInfo
@@ -24,6 +27,7 @@ export const useUserStore = defineStore('user', () => {
   function logout() {
     user.value = null
     token.value = ''
+    activeProfile.value = null
     localStorage.removeItem('token')
     localStorage.removeItem('user')
   }
@@ -32,5 +36,27 @@ export const useUserStore = defineStore('user', () => {
     sidebarCollapsed.value = !sidebarCollapsed.value
   }
 
-  return { user, token, sidebarCollapsed, isLoggedIn, login, logout, toggleSidebar }
+  async function loadActiveProfile() {
+    try {
+      const res = await getActiveProfile(userId.value)
+      if (res && res.code === 200 && res.data) {
+        activeProfile.value = res.data
+      } else {
+        activeProfile.value = null
+      }
+    } catch {
+      activeProfile.value = null
+    }
+  }
+
+  function setActiveProfileLocal(profile) {
+    activeProfile.value = profile
+  }
+
+  return {
+    user, token, sidebarCollapsed, activeProfile,
+    isLoggedIn, userId,
+    login, logout, toggleSidebar,
+    loadActiveProfile, setActiveProfileLocal
+  }
 })

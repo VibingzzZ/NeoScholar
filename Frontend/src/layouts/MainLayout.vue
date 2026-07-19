@@ -51,13 +51,13 @@
           </el-breadcrumb>
         </div>
         <div class="header-right">
-          <el-badge :value="3" :max="99" class="notice-badge">
+          <el-badge :value="0" :max="99" class="notice-badge" :hidden="true">
             <el-icon :size="20"><Bell /></el-icon>
           </el-badge>
           <el-dropdown trigger="click">
             <span class="user-info">
               <el-avatar :size="32" icon="UserFilled" />
-              <span class="username">张同学</span>
+              <span class="username">{{ store.user?.username || '未登录' }}</span>
               <el-icon><ArrowDown /></el-icon>
             </span>
             <template #dropdown>
@@ -78,7 +78,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import {
@@ -93,6 +93,11 @@ const store = useUserStore()
 const sidebarCollapsed = computed(() => store.sidebarCollapsed)
 const activeMenu = computed(() => route.path)
 const pageTitle = computed(() => route.meta.title || '')
+
+// 应用启动时加载活跃画像
+onMounted(() => {
+  store.loadActiveProfile()
+})
 
 function toggleSidebar() {
   store.toggleSidebar()
