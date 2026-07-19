@@ -42,34 +42,37 @@ public class ResourceOrchestratorServiceImpl implements ResourceOrchestratorServ
 
         List<LearningPathNodeDTO> nodes = parseNodes(path.getNodesJson());
         for(LearningPathNodeDTO node : nodes){
-            String content;
-            String agentName;
-            if("ppt".equals(node.getResourceType())){
-                content = pptAgent.generateOutline(node.getTitle(), node.getDescription());
-                agentName = "PPTAgent";
-            }else if("quiz".equals(node.getResourceType())){
-                content = quizAgent.generateQuestion(node.getTitle(), node.getDescription());
-                agentName = "QuizAgent";
-            }else{
-                continue;
+            String type = node.getResourceType();
+            // 如果节点没有 resourceType，默认两种都生成
+            if (type == null || type.isBlank()) {
+                generateSingleResource(pathId, node, "ppt", pptAgent.generateOutline(node.getTitle(), node.getDescription()), "PPTAgent", path.getUserId());
+                generateSingleResource(pathId, node, "quiz", quizAgent.generateQuestion(node.getTitle(), node.getDescription()), "QuizAgent", path.getUserId());
+            } else if("ppt".equals(type)){
+                generateSingleResource(pathId, node, type, pptAgent.generateOutline(node.getTitle(), node.getDescription()), "PPTAgent", path.getUserId());
+            }else if("quiz".equals(type)){
+                generateSingleResource(pathId, node, type, quizAgent.generateQuestion(node.getTitle(), node.getDescription()), "QuizAgent", path.getUserId());
             }
-            String filePath = fileStorageService.save(content, node.getTitle() + ".txt");
-
-            //写数据库
-            LearningResource resource = new LearningResource();
-            resource.setPathId(pathId);
-            resource.setNodeIndex(node.getStepOrder());
-            resource.setTitle(node.getTitle());
-            resource.setContentText(content);
-            resource.setFilePath(filePath);
-            resource.setResourceType(node.getResourceType());
-            resource.setGeneratedByAgent(agentName);
-            learningResourceMapper.insert(resource);
-
-            // 热力图计数：每生成一个 PPT/测验资源 +1
-            activityLogService.incrementActivity(path.getUserId());
         }
     }
+    private void generateSingleResource(Long pathId, LearningPathNodeDTO node,
+                                          String resourceType, String content,
+                                          String agentName, Long userId) throws IOException {
+        String suffix = "ppt".equals(resourceType) ? "_PPT大纲" : "_练习题";
+        String filePath = fileStorageService.save(content, node.getTitle() + suffix + ".txt");
+
+        LearningResource resource = new LearningResource();
+        resource.setPathId(pathId);
+        resource.setNodeIndex(node.getStepOrder());
+        resource.setTitle(node.getTitle() + suffix);
+        resource.setContentText(content);
+        resource.setFilePath(filePath);
+        resource.setResourceType(resourceType);
+        resource.setGeneratedByAgent(agentName);
+        learningResourceMapper.insert(resource);
+
+        activityLogService.incrementActivity(userId);
+    }
+
     private List<LearningPathNodeDTO> parseNodes(String nodeJson) {
         try {
             return objectMapper.readValue(nodeJson,

@@ -6,9 +6,10 @@ import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 import dev.langchain4j.service.spring.AiService;
+import dev.langchain4j.service.spring.AiServiceWiringMode;
 
 @SystemMessage(fromResource = "SystemMergeMsgPrompt.txt")
-@AiService
+@AiService(wiringMode = AiServiceWiringMode.EXPLICIT, chatModel = "openAiChatModel")
 public interface ProfileMergeAIService {
 
     @UserMessage(fromResource = "UserMergeMsgPrompt.txt")

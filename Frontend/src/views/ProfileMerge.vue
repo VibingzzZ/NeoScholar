@@ -189,7 +189,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Connection, Document, MagicStick } from '@element-plus/icons-vue'
-import { listProfiles, mergeProfiles, getProfile } from '@/api/profile'
+import { listProfiles, mergeProfiles, getProfile, getMergeHistory } from '@/api/profile'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
@@ -227,8 +227,27 @@ async function loadProfiles() {
   }
 }
 
+async function loadMergeHistory() {
+  try {
+    const res = await getMergeHistory(userId.value)
+    if (res && res.code === 200 && res.data) {
+      mergeHistory.value = res.data.map(h => ({
+        id: h.id,
+        originalId: h.originalId,
+        targetId: h.targetId,
+        resultSummary: h.resultSummary || '',
+        time: h.mergedAt ? h.mergedAt.slice(0, 16).replace('T', ' ') : '',
+        status: h.status || 'success'
+      }))
+    }
+  } catch (e) {
+    console.error('加载合并历史失败:', e)
+  }
+}
+
 onMounted(() => {
   loadProfiles()
+  loadMergeHistory()
 })
 
 async function doMerge() {
@@ -254,16 +273,10 @@ async function doMerge() {
       const mergedProfile = await pollMergedResult(originalId.value, 30)
       if (mergedProfile) {
         mergedResult.value = mergedProfile
-        // 添加到合并历史
-        mergeHistory.value.unshift({
-          id: mergeHistory.value.length + 1,
-          originalId: originalId.value,
-          targetId: targetId.value,
-          resultSummary: (mergedProfile.learningGoal || '').slice(0, 30) + '...',
-          time: new Date().toLocaleString('zh-CN'),
-          status: 'success'
-        })
         ElMessage.success('画像合并完成！')
+        // 刷新合并历史
+        await loadMergeHistory()
+        await loadProfiles()
       } else {
         ElMessage.info('合并处理中，请稍后刷新画像列表查看结果')
       }

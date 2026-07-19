@@ -2,7 +2,7 @@
   <div class="dashboard">
     <div class="page-header">
       <h2>学习仪表盘</h2>
-      <p class="subtitle">欢迎回来，张同学！来看看你今日的学习概览</p>
+      <p class="subtitle">欢迎回来！来看看你今日的学习概览</p>
     </div>
 
     <!-- 统计卡片 -->
@@ -32,6 +32,45 @@
         </div>
       </el-col>
     </el-row>
+
+    <!-- 活跃画像卡片 -->
+    <div class="card-panel profile-summary-panel" v-if="stats.activeProfile" style="margin-top: 24px">
+      <div class="profile-summary-header">
+        <div class="card-title" style="border: none; padding-bottom: 0; margin-bottom: 0; display: flex; align-items: center; gap: 8px">
+          当前学习画像
+          <el-tag
+            :type="stats.activeProfile.source === 'ai_chat' ? 'success' : stats.activeProfile.source === 'merge' ? 'warning' : 'info'"
+            size="small"
+            effect="plain"
+          >
+            {{ stats.activeProfile.source === 'ai_chat' ? 'AI 提取' : stats.activeProfile.source === 'merge' ? '合并生成' : '手动创建' }}
+          </el-tag>
+        </div>
+        <el-button type="primary" link size="small" @click="$router.push('/profile')">
+          管理画像 <el-icon><ArrowRight /></el-icon>
+        </el-button>
+      </div>
+      <el-row :gutter="20">
+        <el-col :span="8">
+          <div class="profile-field">
+            <span class="pf-label">专业/领域</span>
+            <span class="pf-value">{{ stats.activeProfile.majorOrField || '未设置' }}</span>
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <div class="profile-field">
+            <span class="pf-label">学习目标</span>
+            <span class="pf-value">{{ stats.activeProfile.learningGoal || '未设置' }}</span>
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <div class="profile-field">
+            <span class="pf-label">画像摘要</span>
+            <span class="pf-value">{{ stats.activeProfile.summary || '暂无摘要' }}</span>
+          </div>
+        </el-col>
+      </el-row>
+    </div>
 
     <!-- 学习活跃热力图 -->
     <div class="card-panel heatmap-panel">
@@ -75,7 +114,7 @@
                 :key="di"
                 class="heatmap-cell"
                 :class="day.level"
-                :title="day.label"
+                :title="day.date"
                 @mouseenter="showTooltip($event, day)"
                 @mouseleave="hideTooltip"
               />
@@ -124,7 +163,7 @@
             <el-table-column prop="updateTime" label="最近更新" width="140" />
             <el-table-column label="操作" width="100" align="center">
               <template #default>
-                <el-button type="primary" link size="small">继续学习</el-button>
+                <el-button type="primary" link size="small" @click="$router.push('/learning-path')">继续学习</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -160,7 +199,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { UserFilled, Connection, MapLocation, ChatDotRound } from '@element-plus/icons-vue'
+import { UserFilled, Connection, MapLocation, ChatDotRound, ArrowRight } from '@element-plus/icons-vue'
 import { getDashboardStats } from '@/api/dashboard'
 import { getLearningPaths } from '@/api/path'
 import { useUserStore } from '@/stores/user'
@@ -519,6 +558,39 @@ onMounted(async () => {
   .tooltip-date {
     font-size: 11px;
     color: #9ca3af;
+  }
+}
+
+// ==================== 画像摘要面板 ====================
+.profile-summary-panel {
+  .profile-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .profile-field {
+    padding: 12px;
+    background: #f9fafb;
+    border-radius: 8px;
+    min-height: 64px;
+
+    .pf-label {
+      display: block;
+      font-size: 11px;
+      color: #9ca3af;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .pf-value {
+      font-size: 14px;
+      color: #1f2937;
+      line-height: 1.4;
+      word-break: break-word;
+    }
   }
 }
 

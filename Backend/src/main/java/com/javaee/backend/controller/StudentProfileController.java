@@ -60,4 +60,28 @@ public class StudentProfileController {
         studentProfileService.update(profile);
         return Result.success(profile);
     }
+
+    /**
+     * 获取用户活跃画像
+     */
+    @GetMapping("/active/{userId}")
+    public Result<StudentProfile> getActiveProfile(@PathVariable Long userId) {
+        StudentProfile profile = studentProfileService.getActiveByUserId(userId);
+        if (profile == null) {
+            return Result.error("暂无活跃画像");
+        }
+        return Result.success(profile);
+    }
+
+    /**
+     * 设置活跃画像
+     */
+    @PostMapping("/active/{userId}/{profileId}")
+    public Result<String> setActiveProfile(
+            @PathVariable Long userId,
+            @PathVariable Long profileId) {
+        log.info("切换活跃画像, userId: {}, profileId: {}", userId, profileId);
+        studentProfileService.setActive(profileId, userId);
+        return Result.success("活跃画像已切换");
+    }
 }

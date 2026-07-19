@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @Service
 public class ChatMessageServiceImpl implements ChatMessageService {
@@ -24,5 +25,13 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         message.setMetadata(chatId);
         message.setCreatedAt(new Timestamp(System.currentTimeMillis()));
         chatMessageMapper.insert(message);
+    }
+
+    @Override
+    public List<ChatMessage> getHistoryByUserId(Long userId) {
+        LambdaQueryWrapper<ChatMessage> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ChatMessage::getUserId, userId)
+                .orderByAsc(ChatMessage::getCreatedAt);
+        return chatMessageMapper.selectList(wrapper);
     }
 }

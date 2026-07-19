@@ -1,0 +1,67 @@
+以下是根据你提供的知识点和学习内容，生成的 **JavaScript 核心语法与 DOM 操作** PPT 大纲（共 7 页）。结构清晰，适合有编程基础的学习者快速掌握 JS 核心逻辑。
+
+```markdown
+# JavaScript 核心语法与 DOM 操作
+
+---
+
+## 第1页：课程目标与前置准备
+- 目标：掌握 ES6+ 核心语法、DOM 操作与浏览器 API
+- 前置基础：已有编程经验，理解变量、函数、循环等概念
+- 学习方式：对比已有语言（如 Python / Java）快速迁移理解
+- 工具准备：浏览器控制台、VS Code、Node.js 环境
+
+---
+
+## 第2页：ES6+ 核心语法速览
+- 箭头函数：`() => {}` 简化函数定义，注意 `this` 绑定差异
+- 模板字符串：`` `Hello ${name}` `` 替代字符串拼接
+- 解构赋值：`const {a, b} = obj` 快速提取数据
+- 展开运算符：`...arr` 复制/合并数组或对象
+
+---
+
+## 第3页：异步编程：Promise 与 async/await
+- Promise：`new Promise((resolve, reject) => {})` 处理异步任务
+- 链式调用：`.then()` / `.catch()` 避免回调地狱
+- async/await：`async function` + `await promise` 让异步代码像同步一样写
+- 错误处理：`try...catch` 包裹 await 调用
+
+---
+
+## 第4页：模块化开发（ES Modules）
+- 导出：`export default` / `export const`
+- 导入：`import xxx from './module.js'`
+- 浏览器支持：`<script type="module">` 加载模块
+- 对比 CommonJS（Node.js）：`require` / `module.exports`
+
+---
+
+## 第5页：DOM 操作基础
+- 获取元素：`document.querySelector()` / `getElementById()`
+- 修改内容：`.textContent` / `.innerHTML`
+- 修改样式：`.style.color = 'red'` 或 `classList.add()`
+- 创建与删除：`createElement()` / `appendChild()` / `removeChild()`
+
+---
+
+## 第6页：事件处理与浏览器 API
+- 事件绑定：`element.addEventListener('click', handler)`
+- 事件对象：`event.target` / `event.preventDefault()`
+- 常用浏览器 API：
+  - `localStorage` / `sessionStorage` 存储数据
+  - `fetch()` 发起网络请求
+  - `setTimeout` / `setInterval` 定时任务
+
+---
+
+## 第7页：实战练习与总结
+- 练习项目：待办事项列表（增删改查 + 本地存储）
+- 关键点回顾：
+  - 箭头函数、Promise、模块化是日常开发核心
+  - DOM 操作与事件驱动是前端交互基础
+  - 浏览器 API 拓展 JS 能力
+- 下一步建议：学习 Vue/React 框架，理解组件化与状态管理
+```
+
+如果需要进一步细化某一页的内容（例如添加代码示例或图示），请随时告知。

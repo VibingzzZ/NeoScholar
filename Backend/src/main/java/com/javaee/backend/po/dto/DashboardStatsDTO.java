@@ -29,6 +29,20 @@ public class DashboardStatsDTO {
     /** 每日活动记录（用于热力图） */
     private List<DailyActivity> dailyActivities;
 
+    /** 活跃画像摘要 */
+    private ProfileSummary activeProfile;
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class ProfileSummary {
+        private Long profileId;
+        private String majorOrField;
+        private String learningGoal;
+        private String summary;
+        private String source;
+    }
+
     @Data
     @AllArgsConstructor
     @NoArgsConstructor

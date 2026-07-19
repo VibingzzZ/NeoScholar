@@ -1,7 +1,7 @@
 请分析以下两个学生画像，并将它们智能合并：
 
         原始学生画像：
-        - 专业或领域：{{original.major}}
+        - 专业或领域：{{original.majorOrField}}
         - 学习目标：{{original.learningGoal}}
         - 知识库：{{original.knowledgeBase}}
         - 思维风格：{{original.cognitiveStyle}}

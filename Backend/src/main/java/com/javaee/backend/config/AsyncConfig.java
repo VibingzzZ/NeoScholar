@@ -9,9 +9,14 @@ import java.util.concurrent.Executors;
 @Configuration
 public class AsyncConfig {
 
-    @Bean
-    public ExecutorService profileMergeExecutor(){
+    @Bean("profileMergeExecutor")
+    public ExecutorService profileMergeExecutor() {
         return Executors.newFixedThreadPool(5);
+    }
+
+    @Bean("resourceGenExecutor")
+    public ExecutorService resourceGenExecutor() {
+        return Executors.newFixedThreadPool(3);
     }
 
 }

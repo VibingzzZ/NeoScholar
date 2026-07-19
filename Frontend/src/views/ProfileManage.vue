@@ -19,15 +19,29 @@
               v-for="profile in profiles"
               :key="profile.id"
               class="profile-item"
-              :class="{ active: currentId === profile.id }"
+              :class="{ active: currentId === profile.id, 'is-active-profile': profile.isActive }"
               @click="selectProfile(profile)"
             >
               <div class="profile-avatar">
                 <el-avatar :size="40" icon="UserFilled" />
               </div>
               <div class="profile-info">
-                <div class="profile-name">画像 #{{ profile.id }}</div>
-                <div class="profile-major">{{ profile.majorOrField || '未设置专业' }}</div>
+                <div class="profile-name">
+                  画像 #{{ profile.id }}
+                  <el-tag v-if="profile.isActive" type="success" size="small" effect="dark" style="margin-left: 6px">活跃</el-tag>
+                </div>
+                <div class="profile-major">
+                  {{ profile.majorOrField || '未设置专业' }}
+                  <el-tag
+                    :type="profile.source === 'ai_chat' ? 'success' : profile.source === 'merge' ? 'warning' : 'info'"
+                    size="small"
+                    effect="plain"
+                    style="margin-left: 4px; font-size: 10px"
+                  >
+                    {{ profile.source === 'ai_chat' ? 'AI提取' : profile.source === 'merge' ? '合并' : '手动' }}
+                  </el-tag>
+                </div>
+                <div class="profile-summary-text" v-if="profile.summary">{{ profile.summary }}</div>
                 <div class="profile-time">{{ profile.updateAt }}</div>
               </div>
               <el-icon class="arrow-right"><ArrowRight /></el-icon>
@@ -39,7 +53,24 @@
       <!-- 画像详情/编辑 -->
       <el-col :span="14">
         <div class="card-panel" v-if="currentProfile">
-          <div class="card-title">画像详情</div>
+          <div class="card-title" style="display: flex; justify-content: space-between; align-items: center">
+            <span>画像详情 #{{ currentProfile.id }}</span>
+            <div style="display: flex; gap: 8px">
+              <el-tag
+                v-if="currentProfile.isActive"
+                type="success"
+                size="small"
+                effect="dark"
+              >当前活跃</el-tag>
+              <el-button
+                v-else
+                type="success"
+                size="small"
+                plain
+                @click="activateProfile(currentProfile)"
+              >设为活跃</el-button>
+            </div>
+          </div>
           <el-form :model="editForm" label-width="110px" label-position="left">
             <el-row :gutter="20">
               <el-col :span="12">
@@ -74,6 +105,15 @@
                 type="textarea"
                 :rows="3"
                 placeholder="描述你目前已掌握的知识..."
+              />
+            </el-form-item>
+
+            <el-form-item label="画像摘要">
+              <el-input
+                v-model="editForm.summary"
+                placeholder="一句话概括你的学习画像..."
+                maxlength="255"
+                show-word-limit
               />
             </el-form-item>
 
@@ -139,7 +179,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { UserFilled, ArrowRight } from '@element-plus/icons-vue'
-import { listProfiles, createProfile, updateProfile } from '@/api/profile'
+import { listProfiles, createProfile, updateProfile, setActiveProfile } from '@/api/profile'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
@@ -155,7 +195,8 @@ const editForm = reactive({
   knowledgeBase: '',
   cognitiveStyle: '',
   commonMistakes: '',
-  interactionPreference: ''
+  interactionPreference: '',
+  summary: ''
 })
 
 const newForm = reactive({
@@ -191,8 +232,24 @@ function selectProfile(profile) {
     knowledgeBase: profile.knowledgeBase || '',
     cognitiveStyle: profile.cognitiveStyle || '',
     commonMistakes: profile.commonMistakes || '',
-    interactionPreference: profile.interactionPreference || ''
+    interactionPreference: profile.interactionPreference || '',
+    summary: profile.summary || ''
   })
+}
+
+async function activateProfile(profile) {
+  try {
+    const res = await setActiveProfile(userId.value, profile.id)
+    if (res && res.code === 200) {
+      ElMessage.success('已切换活跃画像')
+      userStore.setActiveProfileLocal(profile)
+      await loadProfiles()
+    } else {
+      ElMessage.error(res?.message || '切换失败')
+    }
+  } catch (e) {
+    ElMessage.error('切换失败，请检查网络')
+  }
 }
 
 async function saveProfile() {
@@ -237,7 +294,9 @@ async function createNewProfile() {
       knowledgeBase: '',
       cognitiveStyle: newForm.cognitiveStyle,
       commonMistakes: '',
-      interactionPreference: '详细讲解'
+      interactionPreference: '详细讲解',
+      source: 'manual',
+      summary: ''
     }
     const res = await createProfile(data)
     if (res && res.code === 200) {
@@ -278,6 +337,11 @@ async function createNewProfile() {
       }
     }
 
+    &.is-active-profile {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+    }
+
     .profile-info {
       flex: 1;
       min-width: 0;
@@ -292,6 +356,16 @@ async function createNewProfile() {
         font-size: 12px;
         color: #6b7280;
         margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .profile-summary-text {
+        font-size: 11px;
+        color: #6b7280;
+        margin-top: 2px;
+        font-style: italic;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;

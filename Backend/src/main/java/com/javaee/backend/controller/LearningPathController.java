@@ -7,7 +7,12 @@ import com.javaee.backend.entity.LearningResource;
 import com.javaee.backend.mapper.LearningResourceMapper;
 import com.javaee.backend.service.FileStorageService;
 import com.javaee.backend.service.LearningPathService;
+import com.javaee.backend.service.ResourceOrchestratorService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -42,6 +47,13 @@ public class LearningPathController {
 
     @Autowired
     private FileStorageService fileStorageService;
+
+    @Autowired
+    private ResourceOrchestratorService resourceOrchestratorService;
+
+    @Autowired
+    @Qualifier("resourceGenExecutor")
+    private ExecutorService resourceGenExecutor;
 
     /**
      * 查询用户的所有学习路径
@@ -102,6 +114,23 @@ public class LearningPathController {
                 .orderByAsc(LearningResource::getNodeIndex);
         List<LearningResource> resources = learningResourceMapper.selectList(wrapper);
         return Result.success(resources);
+    }
+
+    /**
+     * 为学习路径生成配套资源（PPT大纲 + 练习题），异步执行避免超时。
+     */
+    @PostMapping("/{pathId}/generate-resources")
+    public Result<String> generateResources(@PathVariable Long pathId) {
+        log.info("收到资源生成请求（异步）, pathId: {}", pathId);
+        CompletableFuture.runAsync(() -> {
+            try {
+                resourceOrchestratorService.generateResource(pathId);
+                log.info("资源生成完成, pathId: {}", pathId);
+            } catch (Exception e) {
+                log.error("资源生成失败, pathId: {}", pathId, e);
+            }
+        }, resourceGenExecutor);
+        return Result.success("资源生成任务已提交，正在后台处理，请稍后刷新查看");
     }
 
     /**

@@ -1,0 +1,47 @@
+以下是根据你的学习内容生成的 Vue.js 框架入门与实战 PPT 大纲，共 7 页，结构清晰，适合教学或项目汇报场景。
+
+```markdown
+# Vue.js 框架入门与实战
+
+## 第1页：课程目标与概述
+- 掌握 Vue3 核心概念与开发模式
+- 理解 Composition API 与响应式数据机制
+- 学会组件通信、路由配置与状态管理
+- 基于已有 API 调用经验，实现前后端数据交互
+
+## 第2页：Vue3 核心概念与开发环境搭建
+- Vue3 特性：Composition API、TypeScript 支持、性能优化
+- 开发环境：Node.js、Vite、Vue CLI
+- 项目结构：src 目录、组件划分、入口文件
+- 快速体验：创建第一个 Vue3 应用
+
+## 第3页：Composition API 与响应式数据
+- setup 函数：组件逻辑入口
+- ref 与 reactive：声明响应式数据
+- computed 与 watch：派生状态与副作用
+- toRefs 与解构：保持响应性
+
+## 第4页：组件通信方式详解
+- 父子通信：props / emits
+- 跨层级通信：provide / inject
+- 兄弟组件通信：事件总线（mitt）
+- 高阶模式：插槽（slot）与作用域插槽
+
+## 第5页：Vue Router 路由配置与实践
+- 路由基础：安装、配置、router-view
+- 动态路由与嵌套路由
+- 路由守卫：权限控制与登录校验
+- 编程式导航：router.push / replace
+
+## 第6页：状态管理 Pinia 入门
+- 为什么需要状态管理：跨组件共享数据
+- Pinia 核心概念：store、state、getters、actions
+- 创建与使用 store：defineStore
+- 实战：用户登录状态管理
+
+## 第7页：前后端数据交互实战
+- 基于已有 API 经验：axios 封装与拦截器
+- Vue3 中异步请求：onMounted + async/await
+- 数据流闭环：组件调用 store → store 调用 API → 更新视图
+- 完整案例：用户列表 CRUD 页面开发
+```

@@ -1,4 +1,10 @@
+import { get } from './index'
+
 const BASE_URL = '/api'
+
+export function getChatHistory(userId) {
+  return get(`/chat/history/${userId}`)
+}
 
 export function createChatStream(question, chatId, userId, onToken, onDone, onError) {
   const controller = new AbortController()

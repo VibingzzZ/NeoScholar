@@ -33,4 +33,14 @@ public interface StudentProfileService {
      * 根据用户 ID 获取最新画像（用于路径生成等）
      */
     StudentProfile getLatestByUserId(Long userId);
+
+    /**
+     * 获取用户当前活跃画像
+     */
+    StudentProfile getActiveByUserId(Long userId);
+
+    /**
+     * 设置活跃画像（将指定画像设为活跃，其余置为非活跃）
+     */
+    void setActive(Long profileId, Long userId);
 }

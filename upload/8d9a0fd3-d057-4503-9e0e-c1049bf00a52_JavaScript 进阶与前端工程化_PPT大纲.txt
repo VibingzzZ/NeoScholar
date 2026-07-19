@@ -1,0 +1,58 @@
+以下是根据你提供的“JavaScript 进阶与前端工程化”知识点，结合后端开发经验视角生成的 PPT 大纲，共 7 页，结构清晰，适合技术分享或培训场景。
+
+```markdown
+# JavaScript 进阶与前端工程化
+
+## 第1页：课程目标与定位
+- 从基础知识过渡到进阶特性，理解 JavaScript 底层机制
+- 掌握前端工程化核心工具与流程
+- 结合后端开发经验，类比构建流程与模块管理
+
+---
+
+## 第2页：原型链与继承机制
+- 每个对象都有一个内部 `[[Prototype]]`（即 `__proto__`）
+- 原型链：对象通过原型链访问属性和方法，直到 `null`
+- 构造函数 + `prototype` 实现继承，与后端类继承类比
+- 示例：`Person.prototype.sayHello` 实现方法复用
+
+---
+
+## 第3页：闭包与高阶函数
+- 闭包：函数能够记住并访问其词法作用域，即使函数在其作用域外执行
+- 应用：数据私有化、函数工厂、回调与事件处理
+- 高阶函数：接收函数作为参数或返回函数
+- 示例：`map`、`filter`、`reduce` 与后端 `Stream` 或 `LINQ` 类比
+
+---
+
+## 第4页：模块化演进与规范
+- 早期：全局变量、IIFE、命名空间
+- CommonJS（Node.js）：`require` / `module.exports`
+- ES Module（ESM）：`import` / `export`，静态分析，支持 tree shaking
+- 与后端 Maven/Gradle 模块管理类比：依赖声明与版本控制
+
+---
+
+## 第5页：包管理工具：npm 与 yarn
+- npm：Node 默认，`package.json` 管理依赖
+- yarn：更快的缓存与确定性安装（`yarn.lock`）
+- 常用命令：`install`、`add`、`remove`、`update`
+- 类比后端：Maven 的 `pom.xml` 与 Gradle 的 `build.gradle`
+
+---
+
+## 第6页：构建工具：Webpack 与 Vite 基础配置
+- Webpack：打包一切资源，核心概念：entry、output、loader、plugin
+- Vite：基于 ES Module 的开发服务器，冷启动极快，HMR 高效
+- 基础配置示例：处理 JS、CSS、图片
+- 类比后端：Webpack ≈ Maven 打包，Vite ≈ Gradle 增量编译
+
+---
+
+## 第7页：构建流程与工程化思维
+- 开发 → 构建 → 测试 → 部署，与后端 CI/CD 流程一致
+- 前端构建流程：代码检查 → 转译（Babel）→ 打包 → 压缩 → 输出
+- 工程化目标：提升开发效率、代码质量、可维护性
+- 总结：掌握进阶 JS 与工程化工具，是现代前端工程师的必备能力
+```
