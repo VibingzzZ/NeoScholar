@@ -25,6 +25,9 @@ public class ProfileMergeServiceImpl extends ServiceImpl<ProfileMergeMapper, Stu
     private ProfileMergeMapper profileMergeMapper;
 
     @Autowired
+    private com.javaee.backend.mapper.ProfileMergeHistoryMapper mergeHistoryMapper;
+
+    @Autowired
     private ProfileMergeAIService profileMergeService;
 
     @Autowired
@@ -85,10 +88,12 @@ public class ProfileMergeServiceImpl extends ServiceImpl<ProfileMergeMapper, Stu
             updateProfile.setCognitiveStyle(mergedProfile.getCognitiveStyle());
             updateProfile.setCommonMistakes(mergedProfile.getCommonMistakes());
             updateProfile.setInteractionPreference(mergedProfile.getInteractionPreference());
+            updateProfile.setSource("merge");
+            updateProfile.setIsActive(true);
             updateProfile.setUpdateAt(new Timestamp(System.currentTimeMillis()));
 
             // 通过 self 代理调用事务方法，确保 DB 更新有事务保护
-            self.saveMergedProfile(updateProfile, id);
+            self.saveMergedProfile(updateProfile, id, userId, mergedProfile);
 
         } catch (Exception e) {
             log.error("合并学生画像时发生错误", e);
@@ -101,10 +106,26 @@ public class ProfileMergeServiceImpl extends ServiceImpl<ProfileMergeMapper, Stu
      * 必须通过 self 代理调用（而非 this），否则 @Transactional 不生效。
      */
     @Transactional(rollbackFor = Exception.class)
-    public void saveMergedProfile(StudentProfile updateProfile, Long id) {
+    public void saveMergedProfile(StudentProfile updateProfile, Long id, Long userId, MergedProfileDTO mergedProfile) {
         int result = profileMergeMapper.updateById(updateProfile);
         if (result > 0) {
             log.info("学生画像合并成功，ID: {}", id);
+            // 保存合并历史
+            com.javaee.backend.entity.ProfileMergeHistory history =
+                    new com.javaee.backend.entity.ProfileMergeHistory();
+            history.setUserId(userId);
+            history.setOriginalId(id);
+            history.setTargetId(userId);
+            history.setResultSummary(
+                    (mergedProfile.getLearningGoal() != null ? mergedProfile.getLearningGoal() : "") + " | " +
+                    (mergedProfile.getMajorOrField() != null ? mergedProfile.getMajorOrField() : ""));
+            if (history.getResultSummary().length() > 500) {
+                history.setResultSummary(history.getResultSummary().substring(0, 497) + "...");
+            }
+            history.setStatus("success");
+            history.setMergedAt(new Timestamp(System.currentTimeMillis()));
+            mergeHistoryMapper.insert(history);
+            log.info("合并历史已保存, historyId: {}", history.getId());
         } else {
             log.error("学生画像合并失败，ID: {}", id);
             throw new RuntimeException("学生画像合并失败");

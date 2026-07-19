@@ -60,6 +60,13 @@
         </div>
       </div>
 
+      <!-- 活跃画像提示 -->
+      <div class="profile-context-bar" v-if="activeProfileSummary">
+        <el-icon><UserFilled /></el-icon>
+        <span>当前画像：{{ activeProfileSummary }}</span>
+        <el-button type="primary" link size="small" @click="$router.push('/profile')">切换</el-button>
+      </div>
+
       <!-- 输入区域 -->
       <div class="chat-input-area">
         <el-input
@@ -97,9 +104,10 @@
 </template>
 
 <script setup>
-import { ref, nextTick, watch } from 'vue'
+import { ref, nextTick, watch, onMounted, computed } from 'vue'
 import { ChatDotRound, Sunny, UserFilled, Promotion } from '@element-plus/icons-vue'
 import { useChat } from '@/composables/useChat'
+import { useUserStore } from '@/stores/user'
 
 // ========== 内联 Markdown → HTML 转换器 ==========
 function parseMarkdown(text) {
@@ -244,7 +252,9 @@ function inline(text) {
     .replace(/~~(.+?)~~/g, '<del>$1</del>')
 }
 
-const { messages, loading, currentReply, sendMessage, stopStreaming } = useChat()
+const userStore = useUserStore()
+
+const { messages, loading, currentReply, sendMessage, stopStreaming, chatId } = useChat()
 
 const chatBody = ref(null)
 const inputText = ref('')
@@ -256,13 +266,24 @@ const quickQuestions = [
   '如何优化数据库查询性能？'
 ]
 
-const chatId = 'user-' + Date.now()
+const activeProfileSummary = computed(() => {
+  const p = userStore.activeProfile
+  if (!p) return null
+  const parts = []
+  if (p.majorOrField) parts.push(p.majorOrField)
+  if (p.learningGoal) parts.push(p.learningGoal)
+  return parts.join(' · ') || null
+})
+
+onMounted(() => {
+  userStore.loadActiveProfile()
+})
 
 function handleSend() {
   if (!inputText.value.trim() || loading.value) return
   const text = inputText.value.trim()
   inputText.value = ''
-  sendMessage(text, chatId)
+  sendMessage(text)
 }
 
 function sendQuick(q) {
@@ -495,6 +516,28 @@ watch(currentReply, async () => {
         }
       }
     }
+  }
+}
+
+.profile-context-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 24px;
+  background: #f0fdf4;
+  border-top: 1px solid #bbf7d0;
+  font-size: 13px;
+  color: #065f46;
+
+  .el-icon {
+    color: #10b981;
+  }
+
+  span {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 

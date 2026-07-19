@@ -21,3 +21,15 @@ export function updateProfile(data) {
 export function createProfile(data) {
   return post(`${BASE}/create`, data)
 }
+
+export function getActiveProfile(userId) {
+  return get(`${BASE}/active/${userId}`)
+}
+
+export function setActiveProfile(userId, profileId) {
+  return post(`${BASE}/active/${userId}/${profileId}`)
+}
+
+export function getMergeHistory(userId) {
+  return get(`${BASE}/merge-history/${userId}`)
+}

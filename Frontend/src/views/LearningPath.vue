@@ -38,6 +38,9 @@
         <el-button type="primary" plain @click="regeneratePath">
           <el-icon><Refresh /></el-icon> 重新生成
         </el-button>
+        <el-button type="warning" plain @click="generateResourcesForPath" :loading="generating">
+          <el-icon><Edit /></el-icon> 生成练习题/PPT
+        </el-button>
       </div>
 
       <!-- 时间线 -->
@@ -118,14 +121,15 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Refresh, Check, MapLocation, Download } from '@element-plus/icons-vue'
-import { getLearningPaths, updateProgress, generatePath, getPathResources, downloadResource } from '@/api/path'
+import { Refresh, Check, MapLocation, Download, Edit } from '@element-plus/icons-vue'
+import { getLearningPaths, updateProgress, generatePath, getPathResources, downloadResource, generateResources } from '@/api/path'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
 const userId = computed(() => userStore.user?.id || 1)
 
 const activeTab = ref('')
+const generating = ref(false)
 const selectedNodeIndex = ref(0)
 const loading = ref(false)
 
@@ -204,6 +208,42 @@ async function loadResources(pathId) {
   } catch (e) {
     pathResources.value = []
   }
+}
+
+async function generateResourcesForPath() {
+  if (!currentPath.value) return
+  generating.value = true
+  try {
+    const res = await generateResources(currentPath.value.id)
+    if (res && res.code === 200) {
+      ElMessage.success('资源生成任务已提交，后台处理中...')
+      // 轮询刷新（后台异步生成需要时间）
+      pollResources(currentPath.value.id, 0)
+    } else {
+      ElMessage.error(res?.message || '生成失败')
+      generating.value = false
+    }
+  } catch (e) {
+    ElMessage.error('生成失败，请检查网络')
+    generating.value = false
+  }
+}
+
+/** 轮询等待资源生成完成，最多等 60 秒 */
+function pollResources(pathId, attempt) {
+  setTimeout(async () => {
+    await loadResources(pathId)
+    if (pathResources.value.length > 0 || attempt > 20) {
+      generating.value = false
+      if (pathResources.value.length > 0) {
+        ElMessage.success(`已生成 ${pathResources.value.length} 个学习资源`)
+      } else {
+        ElMessage.warning('资源生成中，请稍后手动刷新')
+      }
+    } else {
+      pollResources(pathId, attempt + 1)
+    }
+  }, 3000)
 }
 
 async function regeneratePath() {

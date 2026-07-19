@@ -17,12 +17,16 @@ CREATE TABLE IF NOT EXISTS student_profile (
     cognitive_style VARCHAR(50)  COMMENT '思维风格',
     common_mistakes TEXT         COMMENT '常见错误(JSON)',
     interaction_preference VARCHAR(50) COMMENT '交互偏好',
+    is_active       TINYINT(1)   DEFAULT 0 COMMENT '是否活跃画像(同一用户仅一条)',
+    source          VARCHAR(20)  DEFAULT 'manual' COMMENT '画像来源: manual/ai_chat/merge',
+    summary         VARCHAR(255) COMMENT 'AI生成的画像一句话摘要',
     update_at       DATETIME     COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS learning_paths (
     id                 BIGINT       AUTO_INCREMENT PRIMARY KEY,
     user_id            BIGINT       NOT NULL COMMENT '用户ID',
+    profile_id         BIGINT       COMMENT '关联画像ID',
     path_name          VARCHAR(255) COMMENT '路径名称',
     nodes_json         TEXT         COMMENT '路径节点(JSON)',
     current_node_index INT          DEFAULT 0 COMMENT '当前节点索引',
@@ -57,4 +61,14 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     content     TEXT         COMMENT '消息内容',
     metadata    TEXT         COMMENT '元数据(JSON)',
     created_at  DATETIME     COMMENT '创建时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS profile_merge_history (
+    id              BIGINT       AUTO_INCREMENT PRIMARY KEY,
+    user_id         BIGINT       NOT NULL COMMENT '用户ID',
+    original_id     BIGINT       NOT NULL COMMENT '原始画像ID',
+    target_id       BIGINT       NOT NULL COMMENT '目标画像ID',
+    result_summary  VARCHAR(500) COMMENT '合并结果摘要',
+    status          VARCHAR(20)  DEFAULT 'success' COMMENT '合并状态: success/fail',
+    merged_at       DATETIME     COMMENT '合并时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

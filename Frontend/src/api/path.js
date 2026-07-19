@@ -19,6 +19,11 @@ export function updateProgress(pathId, nodeIndex) {
   return post(`${BASE}/progress`, { pathId, nodeIndex })
 }
 
+/** 为学习路径生成配套资源（PPT大纲 + 练习题） */
+export function generateResources(pathId) {
+  return post(`${BASE}/${pathId}/generate-resources`)
+}
+
 /** 获取学习路径下的所有生成资源（PPT、测验等） */
 export function getPathResources(pathId) {
   return get(`${BASE}/${pathId}/resources`)

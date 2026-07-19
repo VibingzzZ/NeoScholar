@@ -72,6 +72,7 @@ public class PathPlanningServiceImpl extends ServiceImpl<PathPlanningMapper, Lea
             String jsonStr = objectMapper.writeValueAsString(pathNodes);
             path = new LearningPaths();
             path.setUserId(profile.getUserId());
+            path.setProfileId(profile.getId());
             path.setPathName(goal + "_专属学习路径");
             path.setNodesJson(jsonStr);
             path.setCurrentNodeIndex(0);

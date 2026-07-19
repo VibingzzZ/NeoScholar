@@ -15,6 +15,7 @@ import java.sql.Timestamp;
 public class LearningPaths  {
     private Long id;
     private Long userId;
+    private Long profileId;
     private String pathName;
     private String nodesJson;
     private Integer currentNodeIndex;

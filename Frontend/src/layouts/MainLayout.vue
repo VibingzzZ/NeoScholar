@@ -78,7 +78,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import {
@@ -93,6 +93,11 @@ const store = useUserStore()
 const sidebarCollapsed = computed(() => store.sidebarCollapsed)
 const activeMenu = computed(() => route.path)
 const pageTitle = computed(() => route.meta.title || '')
+
+// 应用启动时加载活跃画像
+onMounted(() => {
+  store.loadActiveProfile()
+})
 
 function toggleSidebar() {
   store.toggleSidebar()

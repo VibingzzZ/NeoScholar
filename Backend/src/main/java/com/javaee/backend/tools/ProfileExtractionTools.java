@@ -58,6 +58,8 @@ public class ProfileExtractionTools {
         if (isNew) {
             existing = new StudentProfile();
             existing.setUserId(userId);
+            existing.setSource("ai_chat");
+            existing.setIsActive(true);
             log.info("用户 {} 尚无画像，将创建新画像", userId);
         } else {
             log.info("用户 {} 已有画像 ID: {}，将进行智能合并", userId, existing.getId());
