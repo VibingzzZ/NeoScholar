@@ -15,6 +15,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 
@@ -37,10 +38,21 @@ public class ChatController {
     @Autowired
     private ProfileExtractionTools profileExtractionTools;
 
+    @Autowired
+    private ContentSafetyService contentSafetyService;
+
+    @Autowired
+    private KnowledgeBaseService knowledgeBaseService;
+
     @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> chat(@RequestBody ChatRequest chatRequest) {
         String chatId = chatRequest.getChatId();
         Long userId = chatRequest.getUserId();
+
+        // 内容安全检测：检查用户输入
+        if (!contentSafetyService.isSafe(chatRequest.getQuestion())) {
+            return Flux.just("抱歉，您的输入包含不当内容，请修改后重试。");
+        }
 
         // 注入活跃画像上下文到用户问题中
         String enrichedQuestion = enrichWithProfileContext(
@@ -81,6 +93,20 @@ public class ChatController {
             }
         } catch (Exception e) {
             // DB 迁移尚未完成时静默降级
+        }
+
+        // 注入知识库检索结果（避免 tool calling 的协议兼容问题）
+        try {
+            List<Map<String, String>> kbResults = knowledgeBaseService.search(question, 3);
+            if (!kbResults.isEmpty()) {
+                ctxPrefix += "\n[课程知识库相关内容 — 回答时可引用，标注来源章节]\n";
+                for (Map<String, String> r : kbResults) {
+                    ctxPrefix += "- 【" + r.get("title") + "】(来源:" + r.get("source") + ")\n";
+                    ctxPrefix += "  " + r.get("snippet") + "\n";
+                }
+            }
+        } catch (Exception e) {
+            // 知识库未初始化时静默降级
         }
 
         return ctxPrefix + "\n---\n\n" + question;
