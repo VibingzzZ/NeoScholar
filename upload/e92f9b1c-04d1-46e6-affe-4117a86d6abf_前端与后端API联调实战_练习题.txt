@@ -1,0 +1,121 @@
+好的，作为出题专家，根据您提供的知识点和学习内容，我为您设计了以下练习题。
+
+---
+
+### 前端与后端API联调实战练习题
+
+**说明：** 以下题目围绕使用 Axios/Fetch 调用 RESTful API，并结合 Python 后端（如 Flask/Django）进行 CRUD 操作。请根据所学知识作答。
+
+---
+
+#### 一、选择题
+
+**1. 在使用 Axios 进行前端开发时，如果需要为所有请求自动附加一个 JWT Token 到请求头中，最佳实践是？**
+
+A. 在每个请求中手动添加 `Authorization` 头
+B. 使用 Axios 的 `request` 拦截器统一处理
+C. 将 Token 存储到 Cookie 中，让浏览器自动发送
+D. 使用 `fetch` 的 `credentials: 'include'` 选项
+
+**正确答案：B**
+
+**解析：** Axios 拦截器可以全局拦截请求或响应。在请求拦截器中统一读取存储的 Token（如 localStorage），并设置到 `Authorization` 头，可以避免在每个请求中重复编写代码，是最佳实践。选项 C 虽可行，但 Cookie 有 CSRF 风险且跨域配置复杂，不如拦截器灵活。
+
+---
+
+**2. 前端通过 `fetch` 调用 Python 后端的 POST 接口创建待办事项，后端返回的 HTTP 状态码为 201。以下哪个是最合适的响应处理方式？**
+
+A. 直接解析 JSON 数据，无需检查状态码
+B. 检查 `response.ok` 属性，若为 true 则解析 JSON，否则抛出错误
+C. 只检查状态码是否为 200，否则提示用户
+D. 忽略状态码，直接调用 `response.text()`
+
+**正确答案：B**
+
+**解析：** `response.ok` 属性会检查状态码是否在 200-299 范围内。201 是标准创建成功状态码，属于这个范围。先检查 `response.ok` 再进行 JSON 解析，是处理 fetch 响应的标准且健壮的方式，能统一处理成功与错误情况。状态码 200 不能覆盖 201 等成功情况。
+
+---
+
+**3. 在前后端分离的开发环境中，前端 `http://localhost:3000` 调用后端 `http://localhost:5000/api/todos` 时遇到跨域问题。以下哪个解决方案最合适？**
+
+A. 在前端代码中设置 `mode: 'no-cors'`
+B. 在后端 Python 代码中添加 CORS 中间件，允许 `http://localhost:3000` 访问
+C. 将前端代码直接部署到后端的静态文件目录下
+D. 在前端使用 JSONP 代替 AJAX 请求
+
+**正确答案：B**
+
+**解析：** 跨域问题应由后端解决。在 Python 后端（如 Flask 使用 `flask-cors`，Django 使用 `django-cors-headers`）配置 CORS，明确指定允许的前端源，是标准且安全的做法。选项 A 会限制请求类型和响应内容；选项 C 虽可解决但违背了前后端分离的架构设计；选项 D 仅支持 GET 请求，不适用于 CRUD。
+
+---
+
+#### 二、简答题
+
+**4. 请简述在前后端联调过程中，如何处理用户 Token 过期（如 JWT 过期）的情况？请从后端响应设计和前端处理流程两方面说明。**
+
+**参考答案：**
+
+- **后端响应设计：**
+  - 当后端验证 Token 过期或无效时，应返回统一的 HTTP 状态码，例如 **401 Unauthorized**。
+  - 响应体应包含明确的错误信息，例如 `{"code": 401, "message": "Token expired"}`，方便前端识别。
+
+- **前端处理流程（以 Axios 为例）：**
+  1. 使用 **响应拦截器** 统一监听所有响应。
+  2. 在拦截器中检查 HTTP 状态码是否为 401。
+  3. 若是 401，则：
+     - 清除本地存储的过期 Token（如 `localStorage.removeItem('token')`）。
+     - 将用户重定向到登录页面，提示“登录已过期，请重新登录”。
+     - 可选：利用 **刷新 Token（Refresh Token）** 机制，自动调用刷新接口获取新 Token，并重放原始请求，避免用户频繁登录。
+  4. 对于非 401 的其他错误，按通用错误处理逻辑进行提示。
+
+---
+
+**5. 假设你正在使用 Python Flask 开发一个待办事项 API，前端使用 Axios 调用。请设计一个完整的“删除待办事项”接口的联调流程，包括：后端接口定义（URL、方法、参数、返回）、前端调用代码（包含错误处理）以及一个可能遇到的常见问题及解决方案。**
+
+**参考答案：**
+
+- **后端接口定义（Python Flask）：**
+  - **URL:** `DELETE /api/todos/<int:todo_id>`
+  - **方法:** `DELETE`
+  - **请求头:** `Authorization: Bearer <JWT Token>`
+  - **成功响应:** HTTP 204 No Content（无返回体）或 200 OK（返回 `{"message": "Deleted"}`）
+  - **失败响应:** 404 Not Found（待办不存在），401 Unauthorized（Token 无效）
+
+- **前端调用代码（Axios + 错误处理）：**
+  ```javascript
+  async function deleteTodo(todoId) {
+    try {
+      const response = await axios.delete(`/api/todos/${todoId}`, {
+        headers: {
+          'Authorization': `Bearer ${getTokenFromStorage()}` // 获取存储的 JWT
+        }
+      });
+      // 删除成功（204 无内容，或 200 有内容）
+      console.log('删除成功');
+      // 更新页面 UI，移除该待办项
+    } catch (error) {
+      if (error.response) {
+        // 服务器有响应，但状态码非 2xx
+        const status = error.response.status;
+        if (status === 404) {
+          alert('该待办事项不存在，可能已被他人删除');
+        } else if (status === 401) {
+          alert('身份验证失败，请重新登录');
+          // 重定向到登录页
+        } else {
+          alert('删除失败，请稍后重试');
+        }
+      } else if (error.request) {
+        // 请求已发出，但无响应（网络问题）
+        alert('网络连接异常，请检查网络');
+      } else {
+        // 其他错误
+        alert('发生未知错误');
+      }
+    }
+  }
+  ```
+
+- **常见问题及解决方案：**
+  - **问题：** 前端删除成功后，页面列表未及时更新（数据未刷新）。
+  - **解决方案：** 在删除成功的回调中，直接从本地状态（如 React/Vue 的 state）中移除该待办项，或者重新调用获取列表的接口刷新整个列表。避免依赖后端推送。

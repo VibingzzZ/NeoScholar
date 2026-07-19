@@ -1,0 +1,78 @@
+好的，以下是根据您提供的知识点和学习内容，生成的3道选择题和2道简答题。
+
+---
+
+## Agent开发框架实战练习题
+
+### 一、选择题
+
+**1. 在 LangChain 框架中，构建 Agent 时，以下哪个组件负责决定“下一步该做什么”？**  
+A. Tool (工具)  
+B. LLM (大语言模型)  
+C. Agent Executor (Agent执行器)  
+D. Memory (记忆模块)  
+
+**正确答案：B**
+
+**解析：** Agent 的核心决策逻辑由 LLM 驱动，LLM 根据当前状态（观察、历史）选择下一步动作。Tool 只是执行具体任务的接口，Agent Executor 负责循环调度，而 Memory 用于存储状态。
+
+---
+
+**2. 在 ReAct 模式（Reasoning + Acting）的 Agent 循环中，正确的步骤顺序是？**  
+A. 思考 → 观察 → 行动 → 最终回答  
+B. 行动 → 观察 → 思考 → 最终回答  
+C. 思考 → 行动 → 观察 → 最终回答  
+D. 观察 → 思考 → 行动 → 最终回答  
+
+**正确答案：C**
+
+**解析：** ReAct 模式遵循“思考（Reasoning）→ 行动（Acting）→ 观察（Observation）”的循环。Agent 先基于当前问题推理，然后调用工具行动，再根据工具返回的观察结果继续推理，直到得出最终答案。
+
+---
+
+**3. 关于 AutoGPT 或 BabyAGI 的核心设计思想，以下哪项描述最准确？**  
+A. 使用单一 Prompt 一次性生成所有任务步骤  
+B. 依赖外部数据库存储所有历史对话  
+C. 通过任务队列和优先级管理实现自主任务分解与执行  
+D. 完全由用户手动指定每一步的工具调用  
+
+**正确答案：C**
+
+**解析：** AutoGPT 和 BabyAGI 的核心是自主任务分解与循环执行。它们维护一个任务队列，根据当前目标动态生成子任务，并通过优先级或依赖关系调度执行，实现持续自主运行。
+
+---
+
+### 二、简答题
+
+**4. 请简述 LangChain 中 Toolkits（工具包）的作用，并举例说明如何将搜索引擎工具集成到 Agent 中。**
+
+**参考答案：**  
+Toolkits 是 LangChain 中预定义的、针对特定场景（如数据库操作、网络搜索、文件处理等）的工具集合。它们封装了多个相关工具，并提供了统一的接口，方便 Agent 调用。  
+例如，集成搜索引擎工具时，可以加载 `SerpAPIWrapper` 或 `GoogleSearchAPIWrapper` 作为 Tool，然后将其添加到 Agent 的 `tools` 列表中。Agent 在推理过程中，若判断需要搜索，就会自动调用该工具并获取结果。代码示例：  
+```python
+from langchain.agents import load_tools
+from langchain.agents import initialize_agent
+from langchain.llms import OpenAI
+
+llm = OpenAI(temperature=0)
+tools = load_tools(["serpapi"], llm=llm)  # 加载搜索引擎工具
+agent = initialize_agent(tools, llm, agent="zero-shot-react-description", verbose=True)
+agent.run("What is the current population of Tokyo?")
+```
+
+---
+
+**5. 假设你正在开发一个基于 LangChain 的 Agent，需要让它能够从本地 SQLite 数据库中查询用户信息，并能够根据查询结果生成自然语言回答。请简要描述实现步骤，并指出其中关键的技术点。**
+
+**参考答案：**  
+实现步骤：  
+1. **连接数据库**：使用 `SQLDatabase` 类加载本地 SQLite 文件，例如 `db = SQLDatabase.from_uri("sqlite:///users.db")`。  
+2. **创建数据库工具**：使用 `SQLDatabaseToolkit` 或手动创建 `QuerySQLDataBaseTool` 工具，使其能够执行 SQL 查询。  
+3. **构建 Agent**：将数据库工具与 LLM 结合，选择适合的 Agent 类型（如 `zero-shot-react-description` 或 `conversational-react-description`）。  
+4. **定义 Prompt**：在 Prompt 中明确告诉 Agent 如何构造 SQL 查询，并提示它使用工具获取结果。  
+5. **执行与循环**：Agent 根据用户问题生成 SQL → 调用工具查询数据库 → 获取结果 → LLM 将结果转化为自然语言回答。  
+
+**关键技术点：**  
+- **工具描述**：必须为数据库工具提供清晰的描述，如“输入一个 SQL 查询，返回查询结果”，否则 Agent 可能不知道如何正确调用。  
+- **错误处理**：Agent 生成的 SQL 可能语法错误，需要加入重试或异常捕获机制。  
+- **安全限制**：避免 Agent 执行危险的 SQL 语句（如 DROP TABLE），可通过白名单或只读模式限制。
