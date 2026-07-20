@@ -34,4 +34,13 @@ public class ChatMessageServiceImpl implements ChatMessageService {
                 .orderByAsc(ChatMessage::getCreatedAt);
         return chatMessageMapper.selectList(wrapper);
     }
+
+    @Override
+    public List<ChatMessage> getRecentMessages(Long userId, int limit) {
+        LambdaQueryWrapper<ChatMessage> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ChatMessage::getUserId, userId)
+                .orderByDesc(ChatMessage::getCreatedAt)
+                .last("LIMIT " + limit);
+        return chatMessageMapper.selectList(wrapper);
+    }
 }

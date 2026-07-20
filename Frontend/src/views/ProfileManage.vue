@@ -5,13 +5,27 @@
       <p class="subtitle">管理你的学习画像，让系统更懂你</p>
     </div>
 
+    <!-- AI引导提示 -->
+    <div class="card-panel ai-guide-banner">
+      <div class="ai-guide-content">
+        <el-icon :size="32" color="#4f6ef7"><ChatDotRound /></el-icon>
+        <div class="ai-guide-text">
+          <h4>AI 对话引导填写画像</h4>
+          <p>与 AI 导师对话时，系统会自动识别你的专业、学习目标、知识基础等信息并更新画像，无需手动填写。也可以直接告诉 AI「帮我完善学习画像」。</p>
+        </div>
+        <el-button type="primary" @click="$router.push('/consultant')">
+          去和 AI 对话
+        </el-button>
+      </div>
+    </div>
+
     <el-row :gutter="24">
       <!-- 画像列表 -->
       <el-col :span="10">
         <div class="card-panel">
           <div class="card-title" style="display: flex; justify-content: space-between; align-items: center">
             <span>画像列表</span>
-            <el-button type="primary" size="small" @click="showCreateDialog">新建画像</el-button>
+            <el-button type="primary" size="small" plain @click="showCreateDialog">手动新建</el-button>
           </div>
 
           <div class="profile-list">
@@ -178,7 +192,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { UserFilled, ArrowRight } from '@element-plus/icons-vue'
+import { UserFilled, ArrowRight, ChatDotRound } from '@element-plus/icons-vue'
 import { listProfiles, createProfile, updateProfile, setActiveProfile } from '@/api/profile'
 import { useUserStore } from '@/stores/user'
 
@@ -313,6 +327,24 @@ async function createNewProfile() {
 </script>
 
 <style scoped lang="scss">
+.ai-guide-banner {
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #eef2ff 0%, #fafbff 100%);
+  border: 1px solid #c7d2fe;
+}
+
+.ai-guide-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  .ai-guide-text {
+    flex: 1;
+    h4 { font-size: 15px; color: #1f2937; margin-bottom: 4px; }
+    p { font-size: 13px; color: #6b7280; line-height: 1.5; }
+  }
+}
+
 .profile-list {
   .profile-item {
     display: flex;

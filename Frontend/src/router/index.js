@@ -39,6 +39,12 @@ const router = createRouter({
           meta: { title: '学习路径', icon: 'MapLocation' }
         },
         {
+          path: 'quiz',
+          name: 'QuizAttempt',
+          component: () => import('@/views/QuizAttempt.vue'),
+          meta: { title: '测验练习', icon: 'Edit' }
+        },
+        {
           path: 'consultant',
           name: 'AIConsultant',
           component: () => import('@/views/AIConsultant.vue'),
