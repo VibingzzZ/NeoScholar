@@ -59,7 +59,6 @@ public class ChatController {
                 chatRequest.getQuestion(), userId);
 
         chatMessageService.save(chatRequest.getQuestion(), chatId, userId, "user");
-
         StringBuilder fullReply = new StringBuilder();
         return consultantService.chatWithStream(
                         enrichedQuestion,
