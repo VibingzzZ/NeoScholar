@@ -8,6 +8,8 @@ import com.javaee.backend.mapper.LearningResourceMapper;
 import com.javaee.backend.service.FileStorageService;
 import com.javaee.backend.service.LearningPathService;
 import com.javaee.backend.service.ResourceOrchestratorService;
+import com.javaee.backend.service.ResourceRecommendationService;
+import com.javaee.backend.po.dto.RecommendedResourceDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 
@@ -54,6 +56,9 @@ public class LearningPathController {
     @Autowired
     @Qualifier("resourceGenExecutor")
     private ExecutorService resourceGenExecutor;
+
+    @Autowired
+    private ResourceRecommendationService recommendationService;
 
     /**
      * 查询用户的所有学习路径
@@ -131,6 +136,19 @@ public class LearningPathController {
             }
         }, resourceGenExecutor);
         return Result.success("资源生成任务已提交，正在后台处理，请稍后刷新查看");
+    }
+
+    /**
+     * 基于画像的个性化资源推荐
+     */
+    @GetMapping("/recommend/{userId}")
+    public Result<List<RecommendedResourceDTO>> recommendResources(
+            @PathVariable Long userId,
+            @RequestParam(required = false) Long pathId,
+            @RequestParam(defaultValue = "10") int limit) {
+        log.info("资源推荐请求, userId: {}, pathId: {}, limit: {}", userId, pathId, limit);
+        List<RecommendedResourceDTO> recommendations = recommendationService.recommendResources(userId, pathId, limit);
+        return Result.success(recommendations);
     }
 
     /**

@@ -108,6 +108,9 @@ import { ref, nextTick, watch, onMounted, computed } from 'vue'
 import { ChatDotRound, Sunny, UserFilled, Promotion } from '@element-plus/icons-vue'
 import { useChat } from '@/composables/useChat'
 import { useUserStore } from '@/stores/user'
+import { marked } from 'marked'
+
+marked.setOptions({ breaks: true, gfm: true })
 
 // ========== 内联 Markdown → HTML 转换器 ==========
 function parseMarkdown(text) {
@@ -292,7 +295,8 @@ function sendQuick(q) {
 }
 
 function formatContent(text) {
-  return parseMarkdown(text)
+  if (!text) return ''
+  return marked.parse(text)
 }
 
 watch(
