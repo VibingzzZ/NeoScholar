@@ -28,24 +28,24 @@ spring:
 langchain4j:
   open-ai:
     chat-model:
-      base-url: https://api.deepseek.com
-      api-key: ${DEEPSEEK_API_KEY}
-      model-name: deepseek-chat
+      base-url: https://spark-api-open.xf-yun.com/v1
+      api-key: ${SPARK_API_KEY}
+      model-name: 4.0Ultra
       temperature: 0.7
       max-tokens: 2000
       log-requests: true
       log-responses: true
     streaming-chat-model:
-      base-url: https://api.deepseek.com
-      api-key: ${DEEPSEEK_API_KEY}
-      model-name: deepseek-chat
+      base-url: https://spark-api-open.xf-yun.com/v1
+      api-key: ${SPARK_API_KEY}
+      model-name: 4.0Ultra
       temperature: 0.7
       max-tokens: 2000
-#    embedding-model:
-#      base-url: https://token.peropero.net
-#      api-key: ${QWEN_API_KEY}
-#      model-name: text-embedding-v3
-#      dimension: 1024
+  #    embedding-model:
+  #      base-url: https://token.peropero.net
+  #      api-key: ${QWEN_API_KEY}
+  #      model-name: text-embedding-v3
+  #      dimension: 1024
   community:
     redis:
       host: localhost

@@ -21,17 +21,17 @@ spring:
 langchain4j:
   open-ai:
     chat-model:
-      api-key: ${QWEN_API_KEY:sk-ci-dummy}
-      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
-      model-name: qwen-plus
+      api-key: ${SPARK_API_KEY:sk-ci-dummy}
+      base-url: https://spark-api-open.xf-yun.com/v1
+      model-name: 4.0Ultra
       temperature: 0.7
       max-tokens: 2000
       log-requests: false
       log-responses: false
     streaming-chat-model:
-      api-key: ${QWEN_API_KEY:sk-ci-dummy}
-      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
-      model-name: qwen-plus
+      api-key: ${SPARK_API_KEY:sk-ci-dummy}
+      base-url: https://spark-api-open.xf-yun.com/v1
+      model-name: 4.0Ultra
       temperature: 0.7
       max-tokens: 2000
       log-requests: false

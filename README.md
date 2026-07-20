@@ -35,7 +35,7 @@
                      │
 ┌────────────────────┴────────────────────────────┐
 │               Infrastructure                     │
-│     MySQL 8.0 · Redis 7 · Qwen (DashScope)       │
+│     MySQL 8.0 · Redis 7 · 讯飞星火 4.0 Ultra       │
 │          Docker · Docker Compose · CI/CD         │
 └─────────────────────────────────────────────────┘
 ```
@@ -46,7 +46,7 @@
 |---|---|
 | **前端** | Vue 3 (Composition API), Element Plus, Pinia, Vue Router, Axios, Vite |
 | **后端** | Java 21, Spring Boot 3.5, MyBatis-Plus, Spring Security, JJWT |
-| **AI** | LangChain4j + Qwen (通义千问) via DashScope API |
+| **AI** | LangChain4j + 讯飞星火 4.0 Ultra（OpenAI 兼容接口） |
 | **数据** | MySQL 8.0, Redis 7 |
 | **测试** | JUnit 5, Vitest, @vue/test-utils |
 | **部署** | Docker, Docker Compose, GitHub Actions CI/CD |
@@ -98,7 +98,7 @@ NeoScholar/
 - **Node.js 22**+
 - **MySQL 8.0**
 - **Redis 7**
-- **Qwen API Key**（[DashScope](https://dashscope.aliyuncs.com/) 获取）
+- **讯飞星火 API Key**（[讯飞开放平台](https://console.xfyun.cn/) 获取，使用 OpenAI 兼容接口）
 
 ### 1. 克隆项目
 
@@ -259,7 +259,7 @@ feature/xxx  →  develop  →  main
 
 | 工具/服务 | 来源 | 协议/条款 | 用途 |
 |-----------|------|-----------|------|
-| DeepSeek API | https://platform.deepseek.com | DeepSeek 使用条款 | 大语言模型对话生成 |
+| 讯飞星火 4.0 Ultra | https://console.xfyun.cn/ | 讯飞开放平台使用条款 | 大语言模型对话生成 + 多智能体推理 |
 | LangChain4j Agent/Tool | https://docs.langchain4j.dev | Apache 2.0 | 多智能体协同架构 |
 
 ### 基础设施
