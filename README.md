@@ -227,6 +227,51 @@ feature/xxx  →  develop  →  main
 
 ---
 
+##  开源项目使用声明
+
+本项目在开发过程中使用了以下开源项目和 AI 工具/框架，在此标注名称、来源及协议要求：
+
+### 后端框架与库
+
+| 项目名称 | 版本 | 来源 | 协议 | 用途 |
+|----------|------|------|------|------|
+| Spring Boot | 3.5.14 | https://spring.io/projects/spring-boot | Apache 2.0 | 后端应用框架 |
+| MyBatis-Plus | 3.5.10.1 | https://github.com/baomidou/mybatis-plus | Apache 2.0 | ORM 数据库操作 |
+| LangChain4j | 1.0.1-beta6 | https://github.com/langchain4j/langchain4j | Apache 2.0 | LLM 集成框架，AI 服务编排 |
+| Spring Security | 6.x (随 Boot) | https://spring.io/projects/spring-security | Apache 2.0 | 认证与授权 |
+| JJWT | 0.12.6 | https://github.com/jwtk/jjwt | Apache 2.0 | JWT Token 生成与验证 |
+| Lombok | 最新 | https://projectlombok.org | MIT | 简化 Java 代码 |
+| MySQL Connector/J | 最新 | https://github.com/mysql/mysql-connector-j | GPL 2.0 | MySQL 数据库驱动 |
+
+### 前端框架与库
+
+| 项目名称 | 版本 | 来源 | 协议 | 用途 |
+|----------|------|------|------|------|
+| Vue 3 | ^3.5.34 | https://github.com/vuejs/core | MIT | 前端框架 |
+| Element Plus | ^2.12.0 | https://github.com/element-plus/element-plus | MIT | UI 组件库 |
+| Pinia | ^3.0.4 | https://github.com/vuejs/pinia | MIT | 状态管理 |
+| Vue Router | ^4.5.1 | https://github.com/vuejs/router | MIT | 前端路由 |
+| Axios | ^1.12.2 | https://github.com/axios/axios | MIT | HTTP 客户端 |
+| Vite | ^8.0.12 | https://github.com/vitejs/vite | MIT | 构建工具 |
+| marked | 最新 | https://github.com/markedjs/marked | MIT | Markdown 渲染 |
+
+### AI 模型与工具
+
+| 工具/服务 | 来源 | 协议/条款 | 用途 |
+|-----------|------|-----------|------|
+| DeepSeek API | https://platform.deepseek.com | DeepSeek 使用条款 | 大语言模型对话生成 |
+| LangChain4j Agent/Tool | https://docs.langchain4j.dev | Apache 2.0 | 多智能体协同架构 |
+
+### 基础设施
+
+| 项目名称 | 来源 | 协议 | 用途 |
+|----------|------|------|------|
+| MySQL 8.0 | https://www.mysql.com | GPL 2.0 | 关系型数据库 |
+| Redis 7 | https://redis.io | BSD 3-Clause | 缓存 & 会话存储 |
+| Docker | https://www.docker.com | Apache 2.0 | 容器化部署 |
+
+> **注意**：以上所有开源项目均为其各自所有者的财产。本项目遵循 [Apache License 2.0](LICENSE) 协议，使用上述开源项目时已遵守其各自的许可条款。
+
 ##  License
 
 [Apache License 2.0](LICENSE)

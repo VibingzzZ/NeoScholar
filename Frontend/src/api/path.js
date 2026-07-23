@@ -43,3 +43,8 @@ export async function downloadResource(resourceId, fileName) {
   document.body.removeChild(link)
   window.URL.revokeObjectURL(url)
 }
+
+/** 基于画像的个性化资源推荐 */
+export function getRecommendedResources(userId, pathId, limit = 10) {
+  return get(`${BASE}/recommend/${userId}`, { params: { pathId, limit } })
+}

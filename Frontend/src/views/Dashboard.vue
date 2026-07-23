@@ -147,6 +147,88 @@
       </div>
     </teleport>
 
+    <!-- 学习评估 -->
+    <div class="card-panel assessment-panel" style="margin-top: 24px" v-if="assessment">
+      <div class="card-title">学习效果评估</div>
+      <el-row :gutter="24">
+        <el-col :span="10">
+          <!-- 综合评分 -->
+          <div class="overall-score">
+            <div class="score-circle" :class="levelClass">
+              <span class="score-num">{{ assessment.overallScore }}</span>
+              <span class="score-label">{{ assessment.overallLevel }}</span>
+            </div>
+          </div>
+          <!-- 学习行为 -->
+          <div class="behavior-stats">
+            <div class="behavior-item">
+              <span class="b-num">{{ assessment.behavior?.totalStudyDays || 0 }}</span>
+              <span class="b-label">学习天数</span>
+            </div>
+            <div class="behavior-item">
+              <span class="b-num">{{ assessment.behavior?.totalQuizzes || 0 }}</span>
+              <span class="b-label">测验次数</span>
+            </div>
+            <div class="behavior-item">
+              <span class="b-num">{{ assessment.behavior?.avgQuizScore || 0 }}%</span>
+              <span class="b-label">平均得分</span>
+            </div>
+            <div class="behavior-item">
+              <span class="b-num">{{ assessment.behavior?.engagementLevel || '-' }}</span>
+              <span class="b-label">参与度</span>
+            </div>
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <!-- 雷达图 -->
+          <div class="radar-container" v-if="assessment.dimensionScores">
+            <svg viewBox="-100 -100 200 200" class="radar-svg">
+              <!-- 背景网格 -->
+              <polygon
+                v-for="level in 4" :key="level"
+                :points="getRadarPoints(level * 25)"
+                fill="none" :stroke="level === 4 ? '#c7d2fe' : '#e5e7eb'" stroke-width="1"
+              />
+              <!-- 轴线 -->
+              <line v-for="(_, i) in dimLabels" :key="'axis'+i"
+                :x1="0" :y1="0"
+                :x2="getAxisPoint(i, 100).x" :y2="getAxisPoint(i, 100).y"
+                stroke="#e5e7eb" stroke-width="1"
+              />
+              <!-- 数据区域 -->
+              <polygon
+                :points="getRadarPointsFromScores()"
+                fill="rgba(79,110,247,0.2)" stroke="#4f6ef7" stroke-width="2"
+              />
+              <!-- 数据点 -->
+              <circle
+                v-for="(score, i) in dimScoresList" :key="'dot'+i"
+                :cx="getAxisPoint(i, score).x" :cy="getAxisPoint(i, score).y"
+                r="4" fill="#4f6ef7"
+              />
+              <!-- 标签 -->
+              <text
+                v-for="(label, i) in dimLabels" :key="'label'+i"
+                :x="getAxisPoint(i, 115).x" :y="getAxisPoint(i, 115).y"
+                text-anchor="middle" dominant-baseline="middle"
+                font-size="11" fill="#6b7280"
+              >{{ label }}</text>
+            </svg>
+          </div>
+        </el-col>
+        <el-col :span="6">
+          <!-- 改进建议 -->
+          <div class="suggestions-box">
+            <div class="suggest-title">改进建议</div>
+            <div v-for="(s, i) in (assessment.suggestions || [])" :key="i" class="suggest-item">
+              <el-icon color="#4f6ef7"><Check /></el-icon>
+              <span>{{ s }}</span>
+            </div>
+          </div>
+        </el-col>
+      </el-row>
+    </div>
+
     <!-- 最近学习路径 + 快捷入口 -->
     <el-row :gutter="20" style="margin-top: 24px">
       <el-col :span="16">
@@ -178,10 +260,6 @@
               <el-icon :size="24"><UserFilled /></el-icon>
               <span>学生画像</span>
             </div>
-            <div class="action-item" @click="$router.push('/profile/merge')">
-              <el-icon :size="24"><Connection /></el-icon>
-              <span>画像合并</span>
-            </div>
             <div class="action-item" @click="$router.push('/learning-path')">
               <el-icon :size="24"><MapLocation /></el-icon>
               <span>学习路径</span>
@@ -199,8 +277,8 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { UserFilled, Connection, MapLocation, ChatDotRound, ArrowRight } from '@element-plus/icons-vue'
-import { getDashboardStats } from '@/api/dashboard'
+import { UserFilled, MapLocation, ChatDotRound, ArrowRight } from '@element-plus/icons-vue'
+import { getDashboardStats, getAssessment } from '@/api/dashboard'
 import { getLearningPaths } from '@/api/path'
 import { useUserStore } from '@/stores/user'
 
@@ -340,6 +418,44 @@ const avgPerWeek = computed(() => {
   return total > 0 ? Math.round(total / 52) : 0
 })
 
+// ==================== 学习评估 ====================
+const assessment = ref(null)
+
+const dimLabels = ['知识掌握', '学习投入', '实践能力', '进步速度']
+
+const dimScoresList = computed(() => {
+  if (!assessment.value?.dimensionScores) return [0, 0, 0, 0]
+  return dimLabels.map(l => assessment.value.dimensionScores[l] || 0)
+})
+
+const levelClass = computed(() => {
+  const lv = assessment.value?.overallLevel
+  if (lv === '优秀') return 'level-excellent'
+  if (lv === '良好') return 'level-good'
+  if (lv === '中等') return 'level-medium'
+  return 'level-needs-work'
+})
+
+function getAxisPoint(index, value) {
+  const angle = (Math.PI * 2 * index) / dimLabels.length - Math.PI / 2
+  const r = (value / 100) * 85
+  return { x: Math.cos(angle) * r, y: Math.sin(angle) * r }
+}
+
+function getRadarPoints(level) {
+  return dimLabels.map((_, i) => {
+    const p = getAxisPoint(i, level)
+    return `${p.x},${p.y}`
+  }).join(' ')
+}
+
+function getRadarPointsFromScores() {
+  return dimScoresList.value.map((score, i) => {
+    const p = getAxisPoint(i, score)
+    return `${p.x},${p.y}`
+  }).join(' ')
+}
+
 // ==================== 学习路径 ====================
 const paths = ref([])
 
@@ -376,6 +492,16 @@ onMounted(async () => {
     }
   } catch (e) {
     console.error('获取学习路径数据失败:', e)
+  }
+
+  // 加载学习评估数据
+  try {
+    const assessData = await getAssessment(userId)
+    if (assessData && assessData.code === 200 && assessData.data) {
+      assessment.value = assessData.data
+    }
+  } catch (e) {
+    console.error('获取学习评估数据失败:', e)
   }
 })
 </script>
@@ -618,6 +744,107 @@ onMounted(async () => {
         background: #eef2ff;
         color: #4f6ef7;
       }
+    }
+  }
+}
+
+// ==================== 学习评估 ====================
+.assessment-panel {
+  overflow: hidden;
+}
+
+.overall-score {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+
+  .score-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 4px solid;
+
+    .score-num {
+      font-size: 36px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .score-label {
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    &.level-excellent { border-color: #10b981; .score-num { color: #059669; } }
+    &.level-good { border-color: #4f6ef7; .score-num { color: #4f6ef7; } }
+    &.level-medium { border-color: #f59e0b; .score-num { color: #d97706; } }
+    &.level-needs-work { border-color: #ef4444; .score-num { color: #dc2626; } }
+  }
+}
+
+.behavior-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+
+  .behavior-item {
+    text-align: center;
+    padding: 10px;
+    background: #f9fafb;
+    border-radius: 8px;
+
+    .b-num {
+      display: block;
+      font-size: 22px;
+      font-weight: 700;
+      color: #4f6ef7;
+    }
+
+    .b-label {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 2px;
+    }
+  }
+}
+
+.radar-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+
+  .radar-svg {
+    width: 220px;
+    height: 220px;
+  }
+}
+
+.suggestions-box {
+  .suggest-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 12px;
+  }
+
+  .suggest-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 0;
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.5;
+    border-bottom: 1px solid #f3f4f6;
+
+    .el-icon {
+      margin-top: 2px;
+      flex-shrink: 0;
     }
   }
 }

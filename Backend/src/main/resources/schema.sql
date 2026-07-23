@@ -72,3 +72,15 @@ CREATE TABLE IF NOT EXISTS profile_merge_history (
     status          VARCHAR(20)  DEFAULT 'success' COMMENT '合并状态: success/fail',
     merged_at       DATETIME     COMMENT '合并时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS quiz_attempts (
+    id              BIGINT       AUTO_INCREMENT PRIMARY KEY,
+    user_id         BIGINT       NOT NULL COMMENT '用户ID',
+    resource_id     BIGINT       COMMENT '关联的测验资源ID',
+    answers_json    TEXT         COMMENT '学生作答内容(JSON)',
+    scores_json     TEXT         COMMENT 'AI评分结果(JSON)',
+    total_score     INT          COMMENT '总分',
+    earned_score    INT          COMMENT '得分',
+    feedback        TEXT         COMMENT 'AI综合反馈',
+    attempted_at    DATETIME     COMMENT '作答时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
