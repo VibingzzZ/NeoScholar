@@ -23,10 +23,6 @@
           <el-icon><UserFilled /></el-icon>
           <template #title>学生画像</template>
         </el-menu-item>
-        <el-menu-item index="/profile/merge">
-          <el-icon><Connection /></el-icon>
-          <template #title>画像合并</template>
-        </el-menu-item>
         <el-menu-item index="/learning-path">
           <el-icon><MapLocation /></el-icon>
           <template #title>学习路径</template>
@@ -82,7 +78,7 @@ import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import {
-  Sunny, Odometer, UserFilled, Connection, MapLocation,
+  Sunny, Odometer, UserFilled, MapLocation,
   ChatDotRound, Bell, ArrowDown, DArrowLeft, DArrowRight
 } from '@element-plus/icons-vue'
 

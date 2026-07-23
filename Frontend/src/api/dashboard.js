@@ -5,3 +5,7 @@ const BASE = '/dashboard'
 export function getDashboardStats(userId) {
   return get(`${BASE}/stats/${userId}`)
 }
+
+export function getAssessment(userId) {
+  return get(`${BASE}/assessment/${userId}`)
+}
