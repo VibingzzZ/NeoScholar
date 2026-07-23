@@ -18,6 +18,8 @@ WORKDIR /app/backend
 COPY Backend/mvnw Backend/mvnw.cmd ./
 COPY Backend/.mvn .mvn
 COPY Backend/pom.xml ./
+# 配置阿里云 Maven 镜像，加速依赖下载
+COPY Backend/settings.xml /root/.m2/settings.xml
 RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
 COPY Backend/src ./src
 RUN ./mvnw package -DskipTests -B \
